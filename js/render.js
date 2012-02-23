@@ -3,8 +3,8 @@ var camera, scene, renderer,
  geometry, material,  mesh, controls, pointLight;
 
 // the patches
-var patches_mesh = [];
- 
+var patch_mesh;
+
 /* User-dependent variables */
 var show_curvature, show_controlMesh, show_patch;
 show_controlMesh = true;
@@ -36,15 +36,21 @@ function init() {
   var patches = read_quad_bezier_from_string(bvstr);
   
   init_crv();
+ 
   for(var i = 0; i < patches.length; i++){
     var patch = patches[i];
     // console.log(patch);
     var geo = eval_patch([patch[0],patch[0]],patch[1],5);
 //    var patch_material = new THREE.MeshPhongMaterial( { color: 0xff0000, specular:0xffffff, shininess:50, wireframe: false} );
     var patch_material = new THREE.MeshBasicMaterial( {  shading: THREE.SmoothShading, vertexColors: THREE.VertexColors, wireframe: false} );
-    var patch_mesh = new THREE.Mesh( geo, patch_material );
+    patch_mesh = new THREE.Mesh( geo, patch_material );
     patch_mesh.doubleSided = true;
     patch_mesh.scale.set(0.5,0.5,0.5);
+	
+	/*patches.push(new THREE.Mesh(geo, patch_material));
+	alert("Patch: " + patches[i]);
+	patches[i].doubleSided = true;
+	patches[i].scale.set(0.5,0.5,0.5);*/
 	//patches_mesh.push(patch_mesh);
 	//alert(patches);
 	if (show_patch)
@@ -131,7 +137,12 @@ function render() {
 	scene.add(control_mesh);	
   else
   	scene.remove(control_mesh);
-  
+
+  if (show_patch)
+	scene.add(patch_mesh);	
+  else
+  	scene.remove(patch_mesh);	
+	
   /*if (show_patch) {
   	//alert(patches_mesh.length);
   	for (patch in patches_mesh) {
