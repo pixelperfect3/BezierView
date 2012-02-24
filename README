@@ -1,3 +1,11 @@
 This is an implementation of SurfLab's BezierView using WebGL and Three.js
 
 http://www.cise.ufl.edu/research/SurfLab/bview/
+
+Current version:
+
+http://dl.dropbox.com/u/6665854/BezierView/BezierView.html
+
+Controls:
+-Use mouse buttons to rotate, pan and zoom
+-'c' to toggle control mesh, 'p' to toggle patches
