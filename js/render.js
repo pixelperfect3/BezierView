@@ -1,6 +1,6 @@
 /* Variables for the scene */
 var camera, scene, renderer,
- geometry, material,  mesh, controls, pointLight;
+ geometry, material, regular_material, curvature_material, mesh, controls, pointLight;
 
 // the patches
 var patch_mesh;
@@ -9,7 +9,8 @@ var patch_mesh;
 var show_curvature, show_controlMesh, show_patch;
 show_controlMesh = true;
 show_patch = true;
- 
+show_curvature = false;
+
 bvstr = "";
 
 var test_url = "data/tp3x3.bv";
@@ -40,10 +41,16 @@ function init() {
   for(var i = 0; i < patches.length; i++){
     var patch = patches[i];
     // console.log(patch);
-    var geo = eval_patch([patch[0],patch[0]],patch[1],5);
-//    var patch_material = new THREE.MeshPhongMaterial( { color: 0xff0000, specular:0xffffff, shininess:50, wireframe: false} );
-    var patch_material = new THREE.MeshBasicMaterial( {  shading: THREE.SmoothShading, vertexColors: THREE.VertexColors, wireframe: false} );
-    patch_mesh = new THREE.Mesh( geo, patch_material );
+    geometry = eval_patch([patch[0],patch[0]],patch[1],5);
+	geometry.dynamic = true;
+	
+	// the regular materials
+    curvature_material = new THREE.MeshBasicMaterial( {  shading: THREE.SmoothShading, vertexColors: THREE.VertexColors, wireframe: false} );
+	regular_material = new THREE.MeshPhongMaterial( { color: 0xff0000, specular:0xffffff, shininess:50, wireframe: false} );
+	
+    patch_mesh = new THREE.Mesh( geometry, regular_material);
+	//patch_mesh.dynamic = true;
+	//patch_mesh.material = regular_material;
     patch_mesh.doubleSided = true;
     patch_mesh.scale.set(0.5,0.5,0.5);
 	
@@ -128,35 +135,6 @@ function animate() {
 
 /** the main render function **/
 function render() {
-
-  // mesh.rotation.x += 0.01;
-  // mesh.rotation.y += 0.02;
-
-  // check variables first
-  if (show_controlMesh)
-	scene.add(control_mesh);	
-  else
-  	scene.remove(control_mesh);
-
-  if (show_patch)
-	scene.add(patch_mesh);	
-  else
-  	scene.remove(patch_mesh);	
-	
-  /*if (show_patch) {
-  	//alert(patches_mesh.length);
-  	for (patch in patches_mesh) {
-		if (typeof patch != 'number' && !isNaN(patch)) {
-			scene.add(patch);//alert(patch);
-		}
-	}
-  }
-  else {
-  	for (patch in patches_mesh)
-		if (typeof patch != 'number' && !isNaN(patch))
-			scene.remove(patch);
-  }*/
-		
   renderer.render( scene, camera );
 
 }
@@ -166,11 +144,15 @@ $(document).keypress(function(evt) {
 	// get the character
 	var ch = String.fromCharCode(evt.keyCode);
 	switch(ch) {
-		case 'c': // control mesh
-			show_controlMesh = !show_controlMesh;
+		case 'm': // control mesh
+			toggle_controlMesh();
 			break;
 		case 'p': // patches
-			show_patch = !show_patch;
+			toggle_patches();
+			break;
+		case 'c': // curvature
+			toggle_curvature();
+			//toggle_patches();
 			break;
 		default:
 			break;
@@ -178,3 +160,33 @@ $(document).keypress(function(evt) {
 	}
 }
 );
+
+// toggle variables - callbacks for keypresses and checkboxes
+function toggle_controlMesh() {
+	show_controlMesh = !show_controlMesh;
+	if (show_controlMesh)
+		control_mesh.visible = true;//scene.add(control_mesh);	
+  	else
+  		control_mesh.visible = false;//scene.remove(control_mesh);
+}
+
+function toggle_patches() {
+	show_patch = !show_patch;
+	// show patches?
+  	if (show_patch)
+		patch_mesh.visible = true;//scene.add(patch_mesh);	
+  	else
+  		patch_mesh.visible = false;//scene.remove(patch_mesh);	
+}
+
+function toggle_curvature() {
+	//toggle_patches();
+	show_curvature = !show_curvature;
+	if (patch_mesh.material == regular_material)
+		patch_mesh.material = curvature_material;
+  	else
+		patch_mesh.material = regular_material;
+		
+		//alert(patch_mesh.material);
+}
+
