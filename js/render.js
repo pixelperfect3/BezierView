@@ -52,14 +52,17 @@ function init() {
     patch_mesh = new THREE.Mesh( geometry, regular_material);
 	patch_mesh.doubleSided = true;
     patch_mesh.scale.set(0.5,0.5,0.5);
-	scene.addObject( patch_mesh );
+	//scene.add( patch_mesh );
 	
 	/** CURVATURE Hack - have to recreate geometry and use a different mesh. Probably not the most efficient way **/
 	var geometry_curvature = eval_patch([patch[0],patch[0]],patch[1],5);
 	curvature_mesh = new THREE.Mesh( geometry_curvature, curvature_material);
 	curvature_mesh.doubleSided = true;
     curvature_mesh.scale.set(0.5,0.5,0.5);
-	scene.addObject( curvature_mesh );
+	
+	scene.add( patch_mesh );
+	scene.add( curvature_mesh );
+	
 	curvature_mesh.visible = false; // initially invisible
    	
 	// Which mesh are we currently looking at?
@@ -108,6 +111,7 @@ function init() {
   scene.add( pointLight2 );
 
   renderer = new THREE.WebGLRenderer();
+  renderer.sortObjects = false;
   //renderer = new THREE.CanvasRenderer();
   renderer.setSize( window.innerWidth, window.innerHeight );
   renderer.setFaceCulling(false) ;
