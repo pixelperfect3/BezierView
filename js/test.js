@@ -1,6 +1,8 @@
 var camera, scene, renderer,
  geometry, material,  mesh, controls, pointLight;
 
+var patches = [];
+
 bvstr = "";
 
 var test_url = "data/tp3x3.bv";
@@ -196,7 +198,7 @@ function eval_patch(degs,vecs,subDepth){
   degv = degs[1];
 
   var pts  = 1 << subDepth;
-  
+
   // allocate the memory for the result of evaluation
   C    = pts+1;
   size = C*C;            // how big should the array be
@@ -209,10 +211,10 @@ function eval_patch(degs,vecs,subDepth){
     eval_N[i] = new THREE.Vector3();
     crv_array[i] = new THREE.Vector4();
   }
- 
+
    /*
     use for crv needle, leave for future
- 
+
    //Jianwei
    crv_filter = new Array(size);
    for (var i=0; i<size; i++){
@@ -266,11 +268,11 @@ function eval_patch(degs,vecs,subDepth){
     r2 = (r+2*st)*Cu;
     for (var c = 0; c<sizeu; c += bigstepu) {   // column
       loc = (c/bigstepu*C + r/bigstepv) ;
-      
+
        // curvature
        h = crv4(bb[rs+c],bb[rs+c+st],bb[rs+c+2*st], // curvature
        bb[r1+c],bb[r2+c],bb[r1+c+st],degu, degv, crv_array[loc]);
-       
+
       evalPN(bb[rs+c], bb[r1+c], bb[rs+c+st], eval_P[loc],
 	     eval_N[loc]);
       //printf (" %d %d %d %d %d %d \n", rs+c, rs+c+st, rs+c+2*st,
@@ -279,10 +281,10 @@ function eval_patch(degs,vecs,subDepth){
 
     // last col _| note: stencil is rotated by 90 degrees c = sizeu;
     loc = (c/bigstepu*C + r/bigstepv) ;
-    
+
      h =crv4(bb[rs+c],bb[r1+c],bb[r2+c], bb[rs+c-st],
      bb[rs+c-2*st],bb[r1+c-st],degv, degu, crv_array[loc]);
-     
+
     evalPN(bb[rs+c], bb[rs+c-st], bb[r1+c], eval_P[loc],
 	   eval_N[loc]);
 
@@ -294,10 +296,10 @@ function eval_patch(degs,vecs,subDepth){
   r2 = (r-2*st)*Cu;
   for (var c = 0; c<sizeu; c += bigstepu) {
     loc = (c/bigstepu*C + r/bigstepv) ;
-    
+
      h =crv4(bb[rs+c],bb[r1+c],bb[r2+c], bb[rs+c+st],  	// curvature
      bb[rs+c+2*st],bb[r1+c+st],degv, degu, crv_array[loc]);
-     
+
     evalPN(bb[rs+c], bb[rs+c+st], bb[r1+c], eval_P[loc],
 	   eval_N[loc]);
 
@@ -306,10 +308,10 @@ function eval_patch(degs,vecs,subDepth){
   // top right -|
   c = sizeu;
   loc = (c/bigstepu*C + r/bigstepv) ;
-  
+
    h = crv4(bb[rs+c],bb[rs+c-st],bb[rs+c-2*st], bb[r1+c],  // curvature
    bb[r2+c], bb[r1+c-st],degu, degv, crv_array[loc]);
-   
+
   evalPN(bb[rs+c], bb[r1+c], bb[rs+c-st],  eval_P[loc],
 	 eval_N[loc]);
   /*
@@ -355,11 +357,11 @@ function eval_patch(degs,vecs,subDepth){
       var face;
       if(!normal_flipped) { // reverse the orientation of the patch
           face = new THREE.Face4(v1,v2,v3,v4, [eval_N[v1],eval_N[v2],eval_N[v3],eval_N[v4]]);
-          face.vertexColors = color_array(v1,v2,v3,v4,crv_array)
+        face.vertexColors = color_array(v1,v2,v3,v4,crv_array);
       }
       else {
           face = new THREE.Face4(v4,v3,v2,v1, [eval_N[v4],eval_N[v3],eval_N[v2],eval_N[v1]]);
-          face.vertexColors = color_array(v4,v3,v2,v1,crv_array)
+        face.vertexColors = color_array(v4,v3,v2,v1,crv_array);
       }
       geo.faces.push(face);
     }
@@ -407,19 +409,35 @@ function init() {
 
   scene = new THREE.Scene();
 
+
+
+  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 10000 );
+  camera.position.z = 6;
+  scene.add( camera );
+
   var patches = read_quad_bezier_from_string(bvstr);
+  var patch_material = new THREE.MeshPhongMaterial( { color: 0xff0000, specular:0xffffff, shininess:50, wireframe: false} );
+  var crv_material = new THREE.MeshBasicMaterial( {  shading: THREE.SmoothShading, vertexColors: THREE.VertexColors, wireframe: false} );
+
+  var highlightMaterial = highlight_material();
+
   init_crv();
+
   for(var i = 0; i < patches.length; i++){
     var patch = patches[i];
     // console.log(patch);
     var geo = eval_patch([patch[0],patch[0]],patch[1],5);
-//    var patch_material = new THREE.MeshPhongMaterial( { color: 0xff0000, specular:0xffffff, shininess:50, wireframe: false} );
-    var patch_material = new THREE.MeshBasicMaterial( {  shading: THREE.SmoothShading, vertexColors: THREE.VertexColors, wireframe: false} );
-    var patch_mesh = new THREE.Mesh( geo, patch_material );
+    geo.dynamic = true;
+//    var patch_mesh = new THREE.Mesh( geo, patch_material );
+    var patch_mesh = new THREE.Mesh( geo, highlightMaterial );
     patch_mesh.doubleSided = true;
     patch_mesh.scale.set(0.5,0.5,0.5);
+
+    patch_mesh._modelViewMatrix = new THREE.Matrix4();
+    eval_highlight(0,patch_mesh);
+
     scene.add( patch_mesh );
-  
+
     var control_geometry = eval_control_mesh([patch[0],patch[0]],patch[1]);
     control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
     control_mesh.doubleSided = true;
@@ -427,10 +445,6 @@ function init() {
     scene.add(control_mesh);
   }
 
-
-  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 10000 );
-  camera.position.z = 6;
-  scene.add( camera );
 
   // control_geometry = eval_control_mesh([vecs[0],vecs[0]],vecs[1]);
   // control_geometry.dynamic = true;
