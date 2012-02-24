@@ -1,9 +1,9 @@
 /* Variables for the scene */
 var camera, scene, renderer,
- geometry, material, regular_material, curvature_material, mesh, controls, pointLight;
+ geometry, material, regular_material, curvature_material, controls, pointLight;
 
-// the patches
-var patch_mesh;
+// the meshes
+var patch_mesh, curvature_mesh, current_mesh;
 
 /* User-dependent variables */
 var show_curvature, show_controlMesh, show_patch;
@@ -42,27 +42,37 @@ function init() {
     var patch = patches[i];
     // console.log(patch);
     geometry = eval_patch([patch[0],patch[0]],patch[1],5);
-	geometry.dynamic = true;
+	//geometry.dynamic = true;
 	
-	// the regular materials
+	// material
     curvature_material = new THREE.MeshBasicMaterial( {  shading: THREE.SmoothShading, vertexColors: THREE.VertexColors, wireframe: false} );
 	regular_material = new THREE.MeshPhongMaterial( { color: 0xff0000, specular:0xffffff, shininess:50, wireframe: false} );
 	
+	// the meshes
     patch_mesh = new THREE.Mesh( geometry, regular_material);
-	//patch_mesh.dynamic = true;
-	//patch_mesh.material = regular_material;
-    patch_mesh.doubleSided = true;
+	patch_mesh.doubleSided = true;
     patch_mesh.scale.set(0.5,0.5,0.5);
+	scene.addObject( patch_mesh );
 	
+	/** CURVATURE Hack - have to recreate geometry and use a different mesh. Probably not the most efficient way **/
+	var geometry_curvature = eval_patch([patch[0],patch[0]],patch[1],5);
+	curvature_mesh = new THREE.Mesh( geometry_curvature, curvature_material);
+	curvature_mesh.doubleSided = true;
+    curvature_mesh.scale.set(0.5,0.5,0.5);
+	scene.addObject( curvature_mesh );
+	curvature_mesh.visible = false; // initially invisible
+   	
+	// Which mesh are we currently looking at?
+	current_mesh = patch_mesh;
+	
+	// TODO: For multiple patches
 	/*patches.push(new THREE.Mesh(geo, patch_material));
 	alert("Patch: " + patches[i]);
 	patches[i].doubleSided = true;
 	patches[i].scale.set(0.5,0.5,0.5);*/
 	//patches_mesh.push(patch_mesh);
 	//alert(patches);
-	if (show_patch)
-    	scene.add( patch_mesh );
-  
+	
 	// control mesh
 	var control_geometry = eval_control_mesh([patch[0],patch[0]],patch[1]);
 	control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
@@ -174,19 +184,24 @@ function toggle_patches() {
 	show_patch = !show_patch;
 	// show patches?
   	if (show_patch)
-		patch_mesh.visible = true;//scene.add(patch_mesh);	
+		current_mesh.visible = true;//scene.add(patch_mesh);	
   	else
-  		patch_mesh.visible = false;//scene.remove(patch_mesh);	
+  		current_mesh.visible = false;//scene.remove(patch_mesh);	
 }
 
 function toggle_curvature() {
-	//toggle_patches();
 	show_curvature = !show_curvature;
-	if (patch_mesh.material == regular_material)
-		patch_mesh.material = curvature_material;
-  	else
-		patch_mesh.material = regular_material;
-		
-		//alert(patch_mesh.material);
+	//patch_mesh.visible = false;
+	//curvature_mesh.visible = true;
+	current_mesh.visible = false;
+	if (show_curvature) {
+		current_mesh = curvature_mesh;
+	}
+	else
+		current_mesh = patch_mesh;
+	
+	// is it visible?
+	if (show_patch)
+		current_mesh.visible = true;//scene.add(patch_mesh);	*/
 }
 
