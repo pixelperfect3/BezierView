@@ -1,3 +1,17 @@
+<!-- The main file which will act as the interface to BezierView 
+
+     Author(s):
+     Ruijin Wu
+     Shayan Javed [shayanj at gmail.com]
+-->
+
+<!-- TODO:
+     -User Interface for modifying parameters
+     -Rendering surfaces and surface properties (curvature, reflection lines, normals, etc.)
+     -Reading in multiple types 
+
+     -->
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -16,10 +30,56 @@
   <body>
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-    <script src="js/Three.js"></script>
+    
+	<!-- UI -->
+	Show Control Mesh:
+	<input type = "checkbox" checked="checked" id="cb_controlMesh" onClick="toggle_controlMesh();"/>
+	
+	<br />
+	Show Patches:
+	<input type = "checkbox" checked="checked" id="cb_patches" onClick="toggle_patches();"/>
+	
+	<br />
+	<form>
+	  <div align="left"><br/>
+	    <input type="radio" name="renderMode" value="normal"
+		   onclick="patch_mesh.setRenderMode(bvQuadPatch.Normal);"
+		   checked = "checked"> Normal<br>
+	    <input type="radio" name="renderMode" value="crv"
+		   onclick="patch_mesh.setRenderMode(bvQuadPatch.CurvatureColor);">
+	    Curvature Color <br/>
+	    <input type="radio" name="renderMode" value="highlight"
+		   onclick="patch_mesh.setRenderMode(bvQuadPatch.HighlightLine);"
+		   >
+	    Highlight Line <br/>
+	    <input type="radio" name="renderMode" value="reflect"
+		   onclick="patch_mesh.setRenderMode(bvQuadPatch.ReflectionLine);">
+	    Reflect Line <br/>
+	  </div>
+	</form>
+	
+	<!-- The Three.js library for rendering -->
+	<script src="js/Three.js"></script>
 
-    <script src="js/crv.js"></script>
-    <script src="js/test.js"></script>
+	<!-- The library for curvature rendering -->
+	<script src="js/crv.js"></script>
 
+	<!-- The library for highlight/reflectline -->
+	<script src="js/highlight.js"></script>
+
+	<!-- The library for QuadPatch -->
+	<script src="js/bvQuadPatch.js"></script>
+
+	<!-- The library for reading patches -->
+	<script src="js/read.js"></script>
+	
+	<!-- Evaluating patches -->
+	<script src="js/eval.js"></script>	
+	
+	<!-- The main renderer and starting point -->
+	<script src="js/test.js"></script>
+
+	
+	
   </body>
 </html>

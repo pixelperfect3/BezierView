@@ -30,10 +30,35 @@
   <body>
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-    <script src="js/Three.js"></script>
+    
+	<!-- UI -->
+	Show Control Mesh:
+	<input type = "checkbox" checked="checked" id="cb_controlMesh" onClick="toggle_controlMesh();"/>
+	
+	<br />
+	Show Patches:
+	<input type = "checkbox" checked="checked" id="cb_patches" onClick="toggle_patches();"/>
+	
+	<br />
+	Show Curvature:
+	<input type = "checkbox" id="cb_curvature" onClick="toggle_curvature();"/>
+	
+	<!-- The Three.js library for rendering -->
+	<script src="js/Three.js"></script>
 
+	<!-- The library for reading patches -->
+	<script src="js/read.js"></script>
+	
+	<!-- Evaluating patches -->
+	<script src="js/eval.js"></script>
+	
+	<!-- Curvature -->
     <script src="js/crv.js"></script>
-    <script src="js/test.js"></script>
+	
+	<!-- The main renderer and starting point -->
+    <script src="js/render.js"></script>
 
+	
+	
   </body>
 </html>

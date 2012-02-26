@@ -39,12 +39,31 @@ function init() {
   init_crv();
  
   for(var i = 0; i < patches.length; i++){
-      var patch = patches[i];
-      
-      // the meshes
-      patch_mesh = new bvQuadPatch(patch);
-      //patch_mesh.scale.set(0.5,0.5,0.5);
-      scene.add( patch_mesh );
+    var patch = patches[i];
+    // console.log(patch);
+    geometry = eval_patch([patch[0],patch[0]],patch[1],5);
+	//geometry.dynamic = true;
+	
+	// material
+    curvature_material = new THREE.MeshBasicMaterial( {  shading: THREE.SmoothShading, vertexColors: THREE.VertexColors, wireframe: false} );
+	regular_material = new THREE.MeshPhongMaterial( { color: 0xff0000, specular:0xffffff, shininess:50, wireframe: false} );
+	
+	// the meshes
+    patch_mesh = new THREE.Mesh( geometry, regular_material);
+	patch_mesh.doubleSided = true;
+    patch_mesh.scale.set(0.5,0.5,0.5);
+	//scene.add( patch_mesh );
+	
+	/** CURVATURE Hack - have to recreate geometry and use a different mesh. Probably not the most efficient way **/
+	var geometry_curvature = eval_patch([patch[0],patch[0]],patch[1],5);
+	curvature_mesh = new THREE.Mesh( geometry_curvature, curvature_material);
+	curvature_mesh.doubleSided = true;
+    curvature_mesh.scale.set(0.5,0.5,0.5);
+	
+	scene.add( patch_mesh );
+	scene.add( curvature_mesh );
+	
+	curvature_mesh.visible = false; // initially invisible
    	
 	// Which mesh are we currently looking at?
 	current_mesh = patch_mesh;
@@ -61,7 +80,7 @@ function init() {
 	var control_geometry = eval_control_mesh([patch[0],patch[0]],patch[1]);
 	control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
 	control_mesh.doubleSided = true;
-	//control_mesh.scale.set(0.5,0.5,0.5);
+	control_mesh.scale.set(0.5,0.5,0.5);
 	//scene.add(control_mesh);
 	if (show_controlMesh)
 		scene.add(control_mesh);	
@@ -79,7 +98,6 @@ function init() {
   // scene.add(control_mesh);
 
   // Light
-
   pointLight1 = new THREE.PointLight( 0xffffff );
   pointLight1.position.x = 360;
   pointLight1.position.z = 360;
@@ -191,10 +209,3 @@ function toggle_curvature() {
 		current_mesh.visible = true;//scene.add(patch_mesh);	*/
 }
 
-function toggle_highlight() {
-    if(current_mesh.getRenderMode() == bvQuadPatch.HighlightLine){
-	current_mesh.setRenderMode(bvQuadPatch.ReflectionLine);
-    }
-    else
-	current_mesh.setRenderMode(bvQuadPatch.HighlightLine);
-}
