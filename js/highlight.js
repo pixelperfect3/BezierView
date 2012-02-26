@@ -35,6 +35,7 @@ function calc_D(P, N, A, H){
     else {
 		hl_error = 0;
         //return (VVmult(temp,SA) / div);
+	//console.log(div);
       return temp.dot(SA)/div;
     }
 }
@@ -44,14 +45,16 @@ function calc_ref_line(P, N, A, H, eye)
 {
 	var RefN ;
 	var th;
-	var  SA = new THREE.Vector4();
+// TODO: should double check here @ruijin
+	var  SA = new THREE.Vector3();
 
 	SA.sub(A,P);
 
-	SA.divideScalar(SA.length());
+	SA.divideScalar(SA.length()); 
 	th = SA.dot(N);
-
-	RefN = N.clone().multiplyScalar(2*th).sub(SA);
+//    console.log(th);
+	RefN = N.clone().multiplyScalar(2*th).subSelf(SA);
+    
 	return calc_D( P, RefN, A, H);
 }
 
@@ -111,92 +114,61 @@ function Solve4(A, x)
 		x[i] = y[i];
 }
 
-function highlight_material(){
-  var imageCanvas = document.createElement( "canvas" ),
-  context = imageCanvas.getContext( "2d" );
-  imageCanvas.width = imageCanvas.height = 128;
-  context.fillStyle = "#000000";
-  context.fillRect( 0, 0, 128, 128 );
-
-  context.fillStyle = "#FFFFFF";
-  context.fillRect( 128/3, 0, 128/3, 128);
-
-
-  document.body.appendChild(imageCanvas);
-
-  var textureCanvas = new THREE.Texture( imageCanvas, THREE.UVMapping, THREE.RepeatWrapping, THREE.RepeatWrapping ,THREE.NearestFilter = 3,THREE.NearestFilter = 3);
-
-  var materialCanvas = new THREE.MeshBasicMaterial( { map: textureCanvas } );
-
-  textureCanvas.needsUpdate = true;
-
-  return materialCanvas;
-
-}
-
-
 
 ////////////////////////////////////////////////////////////////
 //
 //  plot the high light
 //
-function eval_highlight(highlight_type, patch) {
-  var array_A = [0.0,  0.0, 40.0, 1.0];
-  var array_H = [0.0,  1.0,  0.0, 0.0];
-  var mv_matrix = new Array(16);
-  var eye = new THREE.Vector4(0, 0, 1000,1);
-  var A,H;
 
-  patch._modelViewMatrix.flattenToArray(mv_matrix);
-  console.log(mv_matrix);
-  Solve4(mv_matrix, array_A);
-  Solve4(mv_matrix, array_H);
+function eval_highlight(highlight_type, patch, funcs) {
+		var array_A = [0.0,  0.0, 40.0, 1.0];
+		var array_H = [0.0,  1.0,  0.0, 0.0];
+		var mv_matrix = new Array(16);
+		var eye = new THREE.Vector4(0, 0, 1000,1);
+		var A,H;
 
-  A = new THREE.Vector4(array_A[0],array_A[1],array_A[2],array_A[3]);
-  H = new THREE.Vector4(array_H[0],array_H[1],array_H[2],array_H[3]);
-
-  var patchuvs = [];
-  // calculate the highlight values according to point and normal
-  for(var i = 0; i < patch.geometry.faces.length; i++)
-  {
-    var face = patch.geometry.faces[i];
-    var ids = [face.a,face.b,face.c,face.d];
-    var N = face.vertexNormals;
-    var P = new Array(4);
-    for (var j = 0; j < 4; j++){
-      P[j] = patch.geometry.vertices[ids[j]].position.clone();
+    if(patch._modelViewMatrix == undefined){
+				var temp_matrix = new THREE.Matrix4();
+				temp_matrix.flattenToArray(mv_matrix);
     }
+    else
+				patch._modelViewMatrix.flattenToArray(mv_matrix);
 
-    var uvs = new Array(4);
-    var func;
+		console.log(mv_matrix);
+		Solve4(mv_matrix, array_A);
+		Solve4(mv_matrix, array_H);
 
-    for(var j = 0; j < 4; j++){
+		A = new THREE.Vector4(array_A[0],array_A[1],array_A[2],array_A[3]);
+		H = new THREE.Vector4(array_H[0],array_H[1],array_H[2],array_H[3]);
 
-      if(highlight_type == HIGHLIGHTLINE) {
-	func = calc_D( P[j], N[j], A, H)/hl_step;
-	//if (calc_D( &P[i*DIM], &N[i*DIM], A, H, &func[i]))
-	if (hl_error){
-	  console.log('hl_error');
-	  return; // return if the patch is numerically unstable,
-	}
+		// calculate the highlight values according to point and normal
+		for(var i = 0; i < patch.geometry.faces.length; i++)
+		{
+				var face = patch.geometry.faces[i];
+				var ids = [face.a,face.b,face.c,face.d];
+				for (var j = 0; j < 4; j++){
+						var N = face.vertexNormals[j];
+						var P = patch.geometry.vertices[ids[j]].position.clone();
+						if(highlight_type == HIGHLIGHTLINE) {
+								func = calc_D( P, N, A, H)/hl_step;
+								//if (calc_D( &P[i*DIM], &N[i*DIM], A, H, &func[i]))
+								if (hl_error){
+										console.log('hl_error');
+										return; // return if the patch is numerically unstable,
+								}
+								
+						}
+						else {
+								func = calc_ref_line( P, N, A, H, eye)/hl_step;
+								//if (calc_ref_line( &P[i*DIM], &N[i*DIM], A, H, eye, &func[i]))
+								if (hl_error){
+										console.log('hl_error');
+										return; // return if the patch is numerically unstable,
+								}
+						}
+						funcs[ids[j]] = func;
+				}
 
-      }
-      else {
-	func = calc_ref_line( P[j], N[j], A, H, eye)/hl_step;
-	//if (calc_ref_line( &P[i*DIM], &N[i*DIM], A, H, eye, &func[i]))
-	if (hl_error){
-	  console.log('hl_error');
-	  return; // return if the patch is numerically unstable,
-	}
-      }
-      // console.log(func);
-      uvs[j] = new THREE.UV(func,0);
-    }
-    patchuvs.push(uvs);
-  }
-  console.log(patchuvs.length);
-  console.log(patch.geometry.faces.length               );
-  patch.geometry.faceVertexUvs[0] = patchuvs;
+		}
 }
-
 
