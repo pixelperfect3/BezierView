@@ -3,16 +3,16 @@ bvQuadPatch = function(patch,parameters){
     parameters = parameters || {};
 
     this.renderMode = parameters.renderMode !== undefined ? parameters.renderMode: bvQuadPatch.Normal;
-    this.subdivisionLevel = parameters.subdivisionLevel !== undefined ? parameters.subdivsionLevel : 5;
+    this.subdivisionLevel = parameters.subdivisionLevel !== undefined ? parameters.subdivisionLevel : 5;
     this.color = parameters.color !== undefined ? new THREE.Color( parameters.color ) : new THREE.Color( 0xff1111 );
     this.ambient = parameters.ambient !== undefined ? new THREE.Color( parameters.ambient ) : new THREE.Color( 0x050505 );
     this.specular = parameters.specular !== undefined ? new THREE.Color( parameters.specular ) : new THREE.Color( 0xAAAAAA );
     this.shininess = parameters.shininess !== undefined ? parameters.shininess : 30;
-
+    
     this.highlightLineColor = parameters.highlightLineColor !== undefined ? new THREE.Color( parameters.highlightLineColor ) : new THREE.Color( 0x116611 );
 
     // generate geometry
-    var patch_geo = eval_patch([patch[0],patch[0]],patch[1],this.subdivisionLevel);
+    var patch_geo = eval_patch([patch.degu,patch.degv],patch.pts,this.subdivisionLevel);
     patch_geo.dynamic = true;
 
     // generate material

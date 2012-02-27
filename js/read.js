@@ -2,7 +2,42 @@
 
 // trims the string
 function trim(str){
-  return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+    return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+}
+
+bvFileParser = function(str){
+    this.lines = str.split('\n');
+    this.stream = [];
+    for(var i = 0; i < this.lines.length; i++){
+	var line = trim(this.lines[i]);
+	if(line.length == 0)
+	    continue;
+	var segs = trim(line).split(/\ +/);
+	this.stream = this.stream.concat(segs);
+    }
+    this.currentPos = 0;
+}
+
+bvFileParser.prototype = {
+    constructor : bvFileParser,
+
+    hasNext : function(){
+	return this.currentPos < this.stream.length;
+    },
+
+    nextToken : function(){
+	var last = this.currentPos;
+	this.currentPos++;
+	return this.stream[last];
+    },
+
+    nextInt : function(){
+	return parseInt(this.nextToken());
+    },
+
+    nextFloat : function(){
+	return parseFloat(this.nextToken());
+    },
 }
 
 // read function
@@ -28,6 +63,7 @@ function read_quad_bezier_from_string(str){
     var deg;
 
     deg = parseInt(segs[1]);
+
     i++;
     //alert('reading patch of degree' + deg);
     var j = 0;
@@ -57,4 +93,64 @@ function read_quad_bezier_from_string(str){
   }
 //  console.log(patches);
   return patches;
+}
+
+function read_vec3(parser){
+    var x,y,z;
+    x = parser.nextFloat();
+    y = parser.nextFloat();
+    z = parser.nextFloat();
+    return new THREE.Vector4(x,y,z,1.0);
+}
+
+function read_vec4(parser){
+    var x,y,z,w;
+    x = parser.nextFloat();
+    y = parser.nextFloat();
+    z = parser.nextFloat();
+    w = parser.nextFloat();
+    return new THREE.Vector4(x,y,z,w);
+}
+
+function read_patches_from_string(str){
+    var parser = new bvFileParser(str);
+
+    var patches = [];
+
+    while(parser.hasNext()){
+	var type = parser.nextInt();
+	switch(type){
+	case 4:
+	case 5:
+	case 8:
+	    patches.push(readQuadPatch(type,parser));
+	    break;
+	default:
+	    alert('unsupport format '+ type);
+	}
+    }
+    return patches;
+}
+
+function readQuadPatch(type,parser){
+    var degu,degv;
+    if(type == 4){
+	degu = parser.nextInt();
+	degv = degu;
+    }
+    else{
+	degu = parser.nextInt();
+	degv = parser.nextInt();
+    }
+
+    var vecs = [];
+    for(var i = 0; i < (degu+1)*(degv+1); i++){
+	if(type == 8){
+	    vecs.push(read_vec4(parser));
+	}
+	else{
+	    vecs.push(read_vec3(parser));
+	}
+    }
+    return {"type":type,"degu":degu,"degv":degv, "pts":vecs};
 }

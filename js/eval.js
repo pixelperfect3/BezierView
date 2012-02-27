@@ -99,13 +99,17 @@ function VVcross(v1, v2)
 
 function evalPN(v00, v01, v10, P, N)
 {
-  var hv1 = v10.clone().subSelf(v00);
-  var hv2 = v01.clone().subSelf(v00);
-  var Normal = VVcross(hv1,hv2);
+  var rv00 = v00.clone().divideScalar(v00.w);
+  var rv10 = v10.clone().divideScalar(v10.w);
+  var rv01 = v01.clone().divideScalar(v01.w);
+
+  rv10.subSelf(rv00);
+  rv01.subSelf(rv00);
+  var Normal = VVcross(rv10,rv01);
   Normal.normalize();
   N.set(Normal.x,Normal.y,Normal.z);
-  P.copy(v00);
-  P.divideScalar(P.w);
+  P.copy(rv00);
+  //P.divideScalar(P.w);
 }
 
 

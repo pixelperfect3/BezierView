@@ -97,6 +97,7 @@ function krv(v00, Deriv, crv_result)
         K = d*d*d*d*(L*N-M*M)/(kes*kes);  // Gaussian curvature
         H = d*(L*G-2*M*F+N*E) / Math.sqrt(kes*kes*kes) /2;  // Mean curvature
         disc = H*H - K;
+	var tol = 0.0001;
         if (disc < 0) {
             if (disc < -tol)
                 // printf("[krv] disc %f H %f \n",disc, H);

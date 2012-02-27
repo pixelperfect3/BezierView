@@ -3,7 +3,7 @@ var camera, scene, renderer,
  geometry, material, regular_material, curvature_material, controls, pointLight;
 
 // the meshes
-var patch_mesh, curvature_mesh, current_mesh;
+var patch_mesh, patch_mesh_list, curvature_mesh, current_mesh;
 
 /* User-dependent variables */
 var show_curvature, show_controlMesh, show_patch;
@@ -34,17 +34,19 @@ function init() {
 
   scene = new THREE.Scene();
   
-  var patches = read_quad_bezier_from_string(bvstr);
-  
+  var patches = read_patches_from_string(bvstr);
+    //console.log(new_read_quad_bezier_from_string(bvstr));
+    patch_mesh_list = [];
   init_crv();
  
   for(var i = 0; i < patches.length; i++){
       var patch = patches[i];
       
       // the meshes
-      patch_mesh = new bvQuadPatch(patch);
-      //patch_mesh.scale.set(0.5,0.5,0.5);
+      patch_mesh = new bvQuadPatch(patch,{subdivisionLevel:5});
+      // patch_mesh.scale.set(0.1,0.1,0.1);
       scene.add( patch_mesh );
+      patch_mesh_list.push(patch_mesh);
    	
 	// Which mesh are we currently looking at?
 	current_mesh = patch_mesh;
@@ -58,13 +60,13 @@ function init() {
 	//alert(patches);
 	
 	// control mesh
-	var control_geometry = eval_control_mesh([patch[0],patch[0]],patch[1]);
-	control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
-	control_mesh.doubleSided = true;
-	//control_mesh.scale.set(0.5,0.5,0.5);
-	//scene.add(control_mesh);
-	if (show_controlMesh)
-		scene.add(control_mesh);	
+	// var control_geometry = eval_control_mesh([patch[0],patch[0]],patch[1]);
+	// control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
+	// control_mesh.doubleSided = true;
+	// //control_mesh.scale.set(0.5,0.5,0.5);
+	// //scene.add(control_mesh);
+	// if (show_controlMesh)
+	// 	scene.add(control_mesh);	
   }
 
 
@@ -197,4 +199,10 @@ function toggle_highlight() {
     }
     else
 	current_mesh.setRenderMode(bvQuadPatch.HighlightLine);
+}
+
+function setPatchRenderMode(mode){
+    for(var i = 0; i < patch_mesh_list.length; i++){
+	patch_mesh_list[i].setRenderMode(mode);
+    }
 }
