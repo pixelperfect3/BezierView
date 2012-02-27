@@ -108,20 +108,25 @@ function evalPN(v00, v01, v10, P, N)
   P.divideScalar(P.w);
 }
 
-
-
-
-function eval_patch(degs,vecs,subDepth){
+/** Evaluates the patch 
+	TODO: 
+	-Check type
+**/
+function eval_patch(type, degs,vecs,subDepth){
   var     size;
   var     Cu, Cv, st, C;
   var     sizeu, sizev, bigstepu, bigstepv, degu, degv;
   var     r, rs, r1, r2, c, loc;
-  var  h;
-  var    bb;
+  var  	  h;
+  var     bb;
 
   degu = degs[0];
   degv = degs[1];
 
+  // TODO: Handle all cases
+  if (type != 4)
+	return new THREE.Geometry();
+	
   var pts  = 1 << subDepth;
   
   // allocate the memory for the result of evaluation
