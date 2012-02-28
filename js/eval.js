@@ -286,15 +286,21 @@ function eval_patch(degs,vecs,subDepth){
       var face;
       if(!normal_flipped) { // reverse the orientation of the patch
           face = new THREE.Face4(v1,v2,v3,v4, [eval_N[v1],eval_N[v2],eval_N[v3],eval_N[v4]]);
-          face.vertexColors = color_array(v1,v2,v3,v4,crv_array)
+          // face.vertexColors = color_array(v1,v2,v3,v4,crv_array)
       }
       else {
           face = new THREE.Face4(v4,v3,v2,v1, [eval_N[v4],eval_N[v3],eval_N[v2],eval_N[v1]]);
-          face.vertexColors = color_array(v4,v3,v2,v1,crv_array)
+          // face.vertexColors = color_array(v4,v3,v2,v1,crv_array)
       }
       geo.faces.push(face);
     }
   }
+  
+  // keep a copy of the raw data
+  geo.rawP = eval_P;
+  geo.rawN = eval_N;
+  geo.rawCrv = crv_array;
+
   return geo;
 
 }

@@ -13,7 +13,7 @@ show_curvature = false;
 
 bvstr = "";
 
-var test_url = "data/tp3x3.bv";
+var test_url = "data/dtorus.bv";
 
 /* get the data */
 $.get(test_url, function(data) {
@@ -68,7 +68,8 @@ function init() {
 	// if (show_controlMesh)
 	// 	scene.add(control_mesh);	
   }
-
+   setPatchCurvatureRange([min_crv.x,min_crv.y,min_crv.z,min_crv.w],[max_crv.x,max_crv.y,max_crv.z,max_crv.w]);
+   // setPatchCurvatureRange([-0.005,min_crv.y,min_crv.z,min_crv.w],[0.005,max_crv.y,max_crv.z,max_crv.w]);
 
   camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 10000 );
   camera.position.z = 6;
@@ -205,4 +206,10 @@ function setPatchRenderMode(mode){
     for(var i = 0; i < patch_mesh_list.length; i++){
 	patch_mesh_list[i].setRenderMode(mode);
     }
+}
+
+function setPatchCurvatureRange(minc,maxc){
+    for(var i = 0; i < patch_mesh_list.length; i++){
+	patch_mesh_list[i].setCurvatureRange(minc,maxc);
+    }    
 }

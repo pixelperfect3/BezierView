@@ -10,6 +10,9 @@ bvQuadPatch = function(patch,parameters){
     this.shininess = parameters.shininess !== undefined ? parameters.shininess : 30;
     
     this.highlightLineColor = parameters.highlightLineColor !== undefined ? new THREE.Color( parameters.highlightLineColor ) : new THREE.Color( 0x116611 );
+    this.maxCrv = parameters.maxCrv !== undefined ? parameters.maxCrv.slice() : [1000,1000,1000,1000];
+    this.minCrv = parameters.minCrv !== undefined ? parameters.minCrv.slice() : [-1000,-1000,-1000,-1000];
+    this.crvType = parameters.crvType !== undefined ? parameters.crvType : 0;
 
     // generate geometry
     var patch_geo = eval_patch([patch.degu,patch.degv],patch.pts,this.subdivisionLevel);
@@ -17,6 +20,7 @@ bvQuadPatch = function(patch,parameters){
 
     // generate material
     var attributes = {
+	crv:{type: 'v4',value: [] },
 	hr_val: {type: 'f', value: [] }
     };
     
@@ -27,10 +31,14 @@ bvQuadPatch = function(patch,parameters){
 	attributes:     attributes,
 	vertexShader:   bvshader.vertexShader, // document.getElementById( 'vertexshader' ).textContent,
 	fragmentShader: bvshader.fragmentShader, // document.getElementById( 'fragmentshader' ).textContent,
-	lights:true,
-	vertexColors :THREE.VertexColors	
+	lights:true
+	//vertexColors :THREE.VertexColors	
     });
 
+    // initial the crv array
+    for(var i = 0; i < patch_geo.rawCrv.length; i++){
+	attributes.crv.value[i] = patch_geo.rawCrv[i];
+    }
 
     THREE.Mesh.call( this, patch_geo, bvmaterial );
     this.doubleSided = true;
@@ -69,6 +77,14 @@ bvQuadPatch.prototype.setRenderMode = function(mode){
     this.updateAttributes();
 }
 
+bvQuadPatch.prototype.setCurvatureRange = function(minc,maxc){
+    for(var i = 0; i < 4; i++){
+	this.maxCrv[i] = isNaN(maxc[i])?1000:maxc[i];
+	this.minCrv[i] = isNaN(minc[i])?-1000:minc[i];
+    }
+    this.updateAttributes();
+}
+
 // recalcuate highlight line
 // TODO: could be moved to pixel shader
 bvQuadPatch.prototype.updateHighlight = function(){
@@ -88,6 +104,10 @@ bvQuadPatch.prototype.updateAttributes = function(){
 
     this.material.uniforms.renderMode.value = this.renderMode;
     this.material.uniforms.highlightLineColor.value.copy(this.highlightLineColor);
+
+    this.material.uniforms.crvType.value = this.crvMode;
+    this.material.uniforms.maxCrv.value.set(this.maxCrv[0],this.maxCrv[1],this.maxCrv[2],this.maxCrv[3]);
+    this.material.uniforms.minCrv.value.set(this.minCrv[0],this.minCrv[1],this.minCrv[2],this.minCrv[3]);
 }
 
 bvshader = {
@@ -105,7 +125,10 @@ bvshader = {
 	    "shininess": { type: "f", value: 30 },
 	    "wrapRGB"  : { type: "v3", value: new THREE.Vector3( 1, 1, 1 ) },
 	    "renderMode": {type: "i" ,value: 2},
-	    "highlightLineColor": {type: 'c', value: new THREE.Color(0x000000) }
+	    "highlightLineColor": {type: 'c', value: new THREE.Color(0x000000) },
+	    "maxCrv": {type: "v4", value: new THREE.Vector4(1000,1000,1000,1000) },
+	    "minCrv": {type: "v4", value: new THREE.Vector4(-1000,-1000,-1000,-1000) },
+	    "crvType": {type: "i", value: 0}
 	},
 	// {
 	// 	"renderMode": {type: "i" ,value: 1}
@@ -117,16 +140,78 @@ bvshader = {
     vertexShader: [
 	"varying vec3 vViewPosition;",
 	"varying vec3 vNormal;",
+	"varying vec3 vColor;",
 	"varying float p_hr_val;",
 	"attribute float hr_val;",
+	"attribute vec4 crv;",
+	"uniform int renderMode;",
+	"uniform int crvMode;",
+	"uniform vec4 maxCrv;",
+	"uniform vec4 minCrv;",
 	//			THREE.ShaderChunk[ "map_pars_vertex" ],
 	//			THREE.ShaderChunk[ "lightmap_pars_vertex" ],
 	//			THREE.ShaderChunk[ "envmap_pars_vertex" ],
 	THREE.ShaderChunk[ "lights_phong_pars_vertex" ],
-	THREE.ShaderChunk[ "color_pars_vertex" ],
+	//THREE.ShaderChunk[ "color_pars_vertex" ],
 	//			THREE.ShaderChunk[ "skinning_pars_vertex" ],
 	//			THREE.ShaderChunk[ "morphtarget_pars_vertex" ],
 	//			THREE.ShaderChunk[ "shadowmap_pars_vertex" ],
+	"vec3 crv2color(vec4 curvature){",
+	"  float maxc,minc,c;",
+        " vec3 colors[5];",
+	" colors[0] = vec3(0.0, 0.0, 0.85);",  // blue 
+        "            colors[1] =         vec3(0.0, 0.9, 0.9);",   // cyan
+        "            colors[2] =         vec3(0.0, 0.75, 0.0);",  // green 
+        "            colors[3] =         vec3(0.9, 0.9, 0.0); " , // yellow 
+        "            colors[4] =         vec3(0.85, 0.0, 0.0);",// red 
+
+
+	"  if(crvMode == 0){",
+	"    maxc = maxCrv.x;",
+	"    minc = minCrv.x;",
+	"    c = curvature.x;",
+	"  }",
+	"  if(crvMode == 1){",
+	"    maxc = maxCrv.y;",
+	"    minc = minCrv.y;",
+	"    c = curvature.y;",
+	"  }",
+	"  if(crvMode == 2){",
+	"    maxc = maxCrv.z;",
+	"    minc = minCrv.z;",
+	"    c = curvature.z;",
+	"  }",
+	"  if(crvMode == 3){",
+	"    maxc = maxCrv.w;",
+	"    minc = minCrv.w;",
+	"    c = curvature.w;",
+	"  }",
+
+	"  if(abs(maxc-minc) < 0.00001) {",
+	"    c = 0.5;",
+	"  }",
+	"  else if (c > maxc) {",
+        "    c = 1.0;",
+	"  } else {",
+        "    if ( c < minc){",
+        "      c = 0.0;",
+        "    } else {",
+        "      c = (c-minc)/(maxc-minc);",
+        "    }",
+	"  }",
+
+	"  if(c>1.0)",
+	"    return colors[4];",
+	"  if(c>0.75)",
+	"    return (c-0.75)/0.25*colors[4]+(1.0-c)/0.25*colors[3];",
+	"  if(c>0.5)",
+	"    return (c-0.5)/0.25*colors[3]+(0.75-c)/0.25*colors[2];",
+	"  if(c>0.25)",
+	"    return (c-0.25)/0.25*colors[2]+(0.5-c)/0.25*colors[1];",
+	"  if(c>0.0)",
+	"    return (c)/0.25*colors[1]+(0.25-c)/0.25*colors[0];",
+	"  return colors[0];",
+	"}",
 
 	"void main() {",
 
@@ -135,7 +220,9 @@ bvshader = {
 	//				THREE.ShaderChunk[ "map_vertex" ],
 	//				THREE.ShaderChunk[ "lightmap_vertex" ],
 	//				THREE.ShaderChunk[ "envmap_vertex" ],
-	THREE.ShaderChunk[ "color_vertex" ],
+	// THREE.ShaderChunk[ "color_vertex" ],
+	"if(renderMode == 1)",
+	"    vColor = crv2color(crv);",
 
 	"#ifndef USE_ENVMAP",
 
@@ -171,7 +258,7 @@ bvshader = {
 	"uniform vec3 highlightLineColor;",
 	"uniform int renderMode;",
 
-	THREE.ShaderChunk[ "color_pars_fragment" ],
+	//THREE.ShaderChunk[ "color_pars_fragment" ],
 	//			THREE.ShaderChunk[ "map_pars_fragment" ],
 	//			THREE.ShaderChunk[ "lightmap_pars_fragment" ],
 	//			THREE.ShaderChunk[ "envmap_pars_fragment" ],
@@ -179,6 +266,7 @@ bvshader = {
 	THREE.ShaderChunk[ "lights_phong_pars_fragment" ],
 	//			THREE.ShaderChunk[ "shadowmap_pars_fragment" ],
 	"varying float p_hr_val;",
+	"varying vec3 vColor;",
 	"void main() {",
 
 	"gl_FragColor = vec4( vec3 ( 1.0 ), opacity );",
@@ -199,7 +287,8 @@ bvshader = {
 	"}",
 	//				THREE.ShaderChunk[ "lightmap_fragment" ],
 	"else if(renderMode == 1){", // curvature render
-	THREE.ShaderChunk[ "color_fragment" ],
+	// THREE.ShaderChunk[ "color_fragment" ],
+	"gl_FragColor = vec4( vColor, opacity );",
 	"}",
 	
 	//				THREE.ShaderChunk[ "envmap_fragment" ],
