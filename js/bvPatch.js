@@ -14,7 +14,12 @@ bvPatch = function(type,degs,points,parameters){
     this.highlightLineColor = parameters.highlightLineColor !== undefined ? new THREE.Color( parameters.highlightLineColor ) : new THREE.Color( 0x116611 );
 
     // generate geometry
-    var patch_geo = eval_patch(type,degs,points,this.subdivisionLevel);
+	var patch_geo;
+	if (type == 1) // geometry already given for polyhedron
+		patch_geo = points;
+	else
+    	patch_geo = eval_patch(type,degs,points,this.subdivisionLevel);
+		
     patch_geo.dynamic = true;
 
     // generate material
