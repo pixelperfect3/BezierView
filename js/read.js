@@ -70,18 +70,35 @@ function read_polyhedron(parser) {
 	console.log("NumFaces: " + numFaces + ",verts: " + numVertices);
 	
 	// all the vertices
-	vertices = []
-	for(var i = 0; i < numVertices; i++) 
+	for(var i = 0; i < numVertices; i++)
 		geo.vertices.push(new THREE.Vertex(read_vec3(parser)));
 		
 	// all the faces
 	for(var i = 0; i < numFaces; i++) {
 		// TODO: For now can only handle faces with 3 or 4 vertices. Need to handle more?
 		var verts = parser.nextInt();
+		
+		// vertex indices
+		var v1, v2, v3, v4;
+		v1 = parser.nextInt();
+		v2 = parser.nextInt();
+		v3 = parser.nextInt();
+		
+		if (verts == 4)
+			v4 = parser.nextInt();
+			
+		// calculate face normal
+		var nv1 = new THREE.Vector4().sub(geo.vertices[v2].position, geo.vertices[v1].position);
+		var nv2 = new THREE.Vector4().sub(geo.vertices[v3].position, geo.vertices[v1].position);
+		var n = VVcross(nv2, nv1);
+		var normal = new THREE.Vector3(n.x, n.y, n.z); // need to convert Vector4 to Vector3
+		
+		console.log("Normal: " + normal.x + "," + normal.y + "," + normal.z);
+		
 		if (verts == 3)
-			geo.faces.push(new THREE.Face3(parser.nextInt(), parser.nextInt(), parser.nextInt()));
+			geo.faces.push(new THREE.Face3(v1, v2, v3, normal));
 		else // 4
-			geo.faces.push(new THREE.Face4(parser.nextInt(), parser.nextInt(), parser.nextInt(), parser.nextInt()));
+			geo.faces.push(new THREE.Face4(v1, v2, v3, v4, normal));
 	}
 	
 	return {"type": 1, "degs":[numFaces, numVertices], "pts": geo};

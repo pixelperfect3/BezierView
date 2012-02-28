@@ -40,7 +40,7 @@ bvPatch = function(type,degs,points,parameters){
 
 
     THREE.Mesh.call( this, patch_geo, bvmaterial );
-    this.doubleSided = true;
+    this.doubleSided = false;
 
     this.setRenderMode(this.renderMode);
     this.updateAttributes();

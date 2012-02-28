@@ -83,7 +83,7 @@ function RSubDiv(bb, step, degu, degv, sizeu, sizev)
 }
 
 
-
+// Cross product 
 function VVcross(v1, v2)
 {
 	var v3 = new THREE.Vector4();
