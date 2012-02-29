@@ -40,23 +40,47 @@
 	<input type = "checkbox" checked="checked" id="cb_patches" onClick="toggle_patches();"/>
 	
 	<br />
-	Show Curvature:
-	<input type = "checkbox" id="cb_curvature" onClick="toggle_curvature();"/>
+	<form>
+	  <div align="left"><br/>
+		View: <br>
+	    <input type="radio" name="renderMode" value="normal"
+		   onclick="setRenderMode(bvPatch.Normal);"
+		   checked = "checked"> Regular<br>
+	    <input type="radio" name="renderMode" value="crv"
+		   onclick="setRenderMode(bvPatch.CurvatureColor);">
+	    Curvature <br/>
+	    <input type="radio" name="renderMode" value="highlight"
+		   onclick="setRenderMode(bvPatch.HighlightLine);"
+		   >
+	    Highlight Lines <br/>
+	    <input type="radio" name="renderMode" value="reflect"
+		   onclick="setRenderMode(bvPatch.ReflectionLine);">
+	    Reflection Lines <br/>
+	  </div>
+	</form>
 	
 	<!-- The Three.js library for rendering -->
 	<script src="js/Three.js"></script>
 
+	<!-- The library for curvature rendering -->
+	<script src="js/crv.js"></script>
+
+	<!-- The library for highlight/reflectline -->
+	<script src="js/highlight.js"></script>
+
+	<!-- The library for bvPatch -->
+	<script src="js/bvPatch.js"></script>
+
+	<!-- Evaluating patches -->
+	<script src="js/eval.js"></script>	
+	
 	<!-- The library for reading patches -->
 	<script src="js/read.js"></script>
 	
-	<!-- Evaluating patches -->
-	<script src="js/eval.js"></script>
 	
-	<!-- Curvature -->
-    <script src="js/crv.js"></script>
 	
 	<!-- The main renderer and starting point -->
-    <script src="js/render.js"></script>
+	<script src="js/render.js"></script>
 
 	
 	
