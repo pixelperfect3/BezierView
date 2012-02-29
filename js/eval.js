@@ -99,13 +99,17 @@ function VVcross(v1, v2)
 
 function evalPN(v00, v01, v10, P, N)
 {
-	var hv1 = v10.clone().subSelf(v00);
-	var hv2 = v01.clone().subSelf(v00);
-	var Normal = VVcross(hv1,hv2);
+	var rv00 = v00.clone().divideScalar(v00.w);
+	var rv10 = v10.clone().divideScalar(v10.w);
+	var rv01 = v01.clone().divideScalar(v01.w);
+
+	rv10.subSelf(rv00);
+	rv01.subSelf(rv00);
+	var Normal = VVcross(rv10,rv01);
 	Normal.normalize();
 	N.set(Normal.x,Normal.y,Normal.z);
-	P.copy(v00);
-	P.divideScalar(P.w);
+	P.copy(rv00);
+	//P.divideScalar(P.w);
 }
 
 /** Evaluates the patch 
@@ -122,15 +126,15 @@ function eval_patch(patch, subDepth){
 
 	var type = patch.type;
 	var vecs = patch.pts;
-	
+
 	var degu = patch.degu;
 	var degv = patch.degv;
 
 	// TODO: Handle all cases
 	if (type == 1) // polyhedron
-		return patch.pts;
-	else if (type != 4)
-		return new THREE.Geometry();
+		return patch.geometry;
+	/*else if (type != 4)
+	  return new THREE.Geometry();*/
 
 	var pts  = 1 << subDepth;
 
@@ -292,15 +296,21 @@ function eval_patch(patch, subDepth){
 			var face;
 			if(!normal_flipped) { // reverse the orientation of the patch
 				face = new THREE.Face4(v1,v2,v3,v4, [eval_N[v1],eval_N[v2],eval_N[v3],eval_N[v4]]);
-				face.vertexColors = color_array(v1,v2,v3,v4,crv_array)
+				// face.vertexColors = color_array(v1,v2,v3,v4,crv_array)
 			}
 			else {
 				face = new THREE.Face4(v4,v3,v2,v1, [eval_N[v4],eval_N[v3],eval_N[v2],eval_N[v1]]);
-				face.vertexColors = color_array(v4,v3,v2,v1,crv_array)
+				// face.vertexColors = color_array(v4,v3,v2,v1,crv_array)
 			}
 			geo.faces.push(face);
 		}
 	}
+
+	// keep a copy of the raw data
+	geo.rawP = eval_P;
+	geo.rawN = eval_N;
+	geo.rawCrv = crv_array;
+
 	return geo;
 
 }
@@ -312,7 +322,7 @@ function eval_control_mesh(type, degs,vecs){
 
 	// different for each type
 	var geo = new THREE.Geometry();
-	
+
 	if (type == 1) {	// Polyhedron
 		// all the vertices
 	} 
@@ -320,11 +330,14 @@ function eval_control_mesh(type, degs,vecs){
 		degu = degs[0];
 		degv = degs[1];
 
-		
+
 
 		size = (degu+1)*(degv+1);
 		for(var i = 0; i < size; i++){
-			geo.vertices.push(new THREE.Vertex(vecs[i].clone()));
+			if(type == 8) // rationize the vertice
+				geo.vertices.push(new THREE.Vertex(vecs[i].clone().divideScalar(vecs[i].w)));
+			else
+				geo.vertices.push(new THREE.Vertex(vecs[i].clone()));
 		}
 
 		var stepu = degu+1;

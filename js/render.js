@@ -15,7 +15,7 @@ var subdivision_level = 5;
 
 bvstr = "";
 
-var test_url = "data/cube.bv";//teapot.bv";//tp3x3.bv";
+var test_url = "data/dtorus.bv";//tp3x3.bv";
 
 /* get the data */
 $.get(test_url, function(data) {
@@ -73,9 +73,9 @@ function init() {
 		// control mesh
 		var control_geometry;
 		if (patches[i].type == 1) // polyhedron
-			control_geometry = patches[i].pts;
+			control_geometry = patches[i].geometry;
 		else
-			control_geometry = eval_control_mesh(patches[i].type, patches[i].degs, patches[i].pts);
+			control_geometry = eval_control_mesh(patches[i].type, [patches[i].degu,patches[i].degv], patches[i].pts);
 		control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
 		control_mesh.doubleSided = true;
 		control_mesh.scale.set(0.5,0.5,0.5);
@@ -83,6 +83,9 @@ function init() {
 		control_meshes.push(control_mesh);
 	}
 
+	// Set's the curvature's range after generating all the patches [min and max]
+	// TODO: Set range by slider interface
+	setPatchCurvatureRange([min_crv.x,min_crv.y,min_crv.z,min_crv.w],[max_crv.x,max_crv.y,max_crv.z,max_crv.w]);
 
 	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 10000 );
 	camera.position.z = 6;
@@ -175,6 +178,13 @@ function toggle_patches() {
 			patch_meshes[i].visible = true;
 		else
 			patch_meshes[i].visible = false;
+}
+
+// set the curvature scale range
+function setPatchCurvatureRange(minc,maxc){
+	for(var i = 0; i < patch_meshes.length; i++){
+		patch_meshes[i].setCurvatureRange(minc,maxc);
+	}    
 }
 
 
