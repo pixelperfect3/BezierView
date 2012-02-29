@@ -83,7 +83,7 @@ function RSubDiv(bb, step, degu, degv, sizeu, sizev)
 }
 
 
-
+// Cross product 
 function VVcross(v1, v2)
 {
   var v3 = new THREE.Vector4();
@@ -112,10 +112,8 @@ function evalPN(v00, v01, v10, P, N)
   //P.divideScalar(P.w);
 }
 
-
-
-
-function eval_patch(degs,vecs,subDepth){
+/** Evaluates the tensor product patch  **/
+function eval_tensor_product_patch(degs,vecs,subDepth){
   var     size;
   var     Cu, Cv, st, C;
   var     sizeu, sizev, bigstepu, bigstepv, degu, degv;
@@ -127,7 +125,7 @@ function eval_patch(degs,vecs,subDepth){
   degv = degs[1];
 
   var pts  = 1 << subDepth;
-  
+
   // allocate the memory for the result of evaluation
   C    = pts+1;
   size = C*C;            // how big should the array be
@@ -140,10 +138,10 @@ function eval_patch(degs,vecs,subDepth){
     eval_N[i] = new THREE.Vector3();
     crv_array[i] = new THREE.Vector4();
   }
- 
+
    /*
     use for crv needle, leave for future
- 
+
    //Jianwei
    crv_filter = new Array(size);
    for (var i=0; i<size; i++){
@@ -197,11 +195,11 @@ function eval_patch(degs,vecs,subDepth){
     r2 = (r+2*st)*Cu;
     for (var c = 0; c<sizeu; c += bigstepu) {   // column
       loc = (c/bigstepu*C + r/bigstepv) ;
-      
+
        // curvature
        h = crv4(bb[rs+c],bb[rs+c+st],bb[rs+c+2*st], // curvature
        bb[r1+c],bb[r2+c],bb[r1+c+st],degu, degv, crv_array[loc]);
-       
+
       evalPN(bb[rs+c], bb[r1+c], bb[rs+c+st], eval_P[loc],
 	     eval_N[loc]);
       //printf (" %d %d %d %d %d %d \n", rs+c, rs+c+st, rs+c+2*st,
@@ -210,10 +208,10 @@ function eval_patch(degs,vecs,subDepth){
 
     // last col _| note: stencil is rotated by 90 degrees c = sizeu;
     loc = (c/bigstepu*C + r/bigstepv) ;
-    
+
      h =crv4(bb[rs+c],bb[r1+c],bb[r2+c], bb[rs+c-st],
      bb[rs+c-2*st],bb[r1+c-st],degv, degu, crv_array[loc]);
-     
+
     evalPN(bb[rs+c], bb[rs+c-st], bb[r1+c], eval_P[loc],
 	   eval_N[loc]);
 
@@ -225,10 +223,10 @@ function eval_patch(degs,vecs,subDepth){
   r2 = (r-2*st)*Cu;
   for (var c = 0; c<sizeu; c += bigstepu) {
     loc = (c/bigstepu*C + r/bigstepv) ;
-    
+
      h =crv4(bb[rs+c],bb[r1+c],bb[r2+c], bb[rs+c+st],  	// curvature
      bb[rs+c+2*st],bb[r1+c+st],degv, degu, crv_array[loc]);
-     
+
     evalPN(bb[rs+c], bb[rs+c+st], bb[r1+c], eval_P[loc],
 	   eval_N[loc]);
 
@@ -237,10 +235,10 @@ function eval_patch(degs,vecs,subDepth){
   // top right -|
   c = sizeu;
   loc = (c/bigstepu*C + r/bigstepv) ;
-  
+
    h = crv4(bb[rs+c],bb[rs+c-st],bb[rs+c-2*st], bb[r1+c],  // curvature
    bb[r2+c], bb[r1+c-st],degu, degv, crv_array[loc]);
-   
+
   evalPN(bb[rs+c], bb[r1+c], bb[rs+c-st],  eval_P[loc],
 	 eval_N[loc]);
   /*
@@ -305,17 +303,28 @@ function eval_patch(degs,vecs,subDepth){
 
 }
 
-function eval_control_mesh(degs,vecs){
+/** generates the control mesh **/
+function eval_control_mesh(type, degs,vecs){
   var     size;
   var     sizeu, sizev, bigstepu, bigstepv, degu, degv;
 
+	// different for each type
+	var geo = new THREE.Geometry();
+	
+	if (type == 1) {	// Polyhedron
+		// all the vertices
+	} 
+	else {
   degu = degs[0];
   degv = degs[1];
 
-  var geo = new THREE.Geometry();
+		
 
   size = (degu+1)*(degv+1);
   for(var i = 0; i < size; i++){
+      if(type == 8) // rationize the vertice
+	  geo.vertices.push(new THREE.Vertex(vecs[i].clone().divideScalar(vecs[i].w)));
+      else
     geo.vertices.push(new THREE.Vertex(vecs[i].clone()));
   }
 
@@ -331,6 +340,7 @@ function eval_control_mesh(degs,vecs){
     }
 
   }
+	}
 
   return geo;
 

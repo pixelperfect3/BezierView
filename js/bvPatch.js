@@ -1,21 +1,29 @@
+/** Represents a bezier view patch object **/
 
-bvQuadPatch = function(patch,parameters){
+// TODO: Perhaps geometry should be passed in
+bvPatch = function(patch,parameters){
     parameters = parameters || {};
 
-    this.renderMode = parameters.renderMode !== undefined ? parameters.renderMode: bvQuadPatch.Normal;
+    this.renderMode = parameters.renderMode !== undefined ? parameters.renderMode: bvPatch.Normal;
     this.subdivisionLevel = parameters.subdivisionLevel !== undefined ? parameters.subdivisionLevel : 5;
     this.color = parameters.color !== undefined ? new THREE.Color( parameters.color ) : new THREE.Color( 0xff1111 );
     this.ambient = parameters.ambient !== undefined ? new THREE.Color( parameters.ambient ) : new THREE.Color( 0x050505 );
     this.specular = parameters.specular !== undefined ? new THREE.Color( parameters.specular ) : new THREE.Color( 0xAAAAAA );
     this.shininess = parameters.shininess !== undefined ? parameters.shininess : 30;
-    
+
     this.highlightLineColor = parameters.highlightLineColor !== undefined ? new THREE.Color( parameters.highlightLineColor ) : new THREE.Color( 0x116611 );
     this.maxCrv = parameters.maxCrv !== undefined ? parameters.maxCrv.slice() : [1000,1000,1000,1000];
     this.minCrv = parameters.minCrv !== undefined ? parameters.minCrv.slice() : [-1000,-1000,-1000,-1000];
     this.crvType = parameters.crvType !== undefined ? parameters.crvType : 0;
 
     // generate geometry
-    var patch_geo = eval_patch([patch.degu,patch.degv],patch.pts,this.subdivisionLevel);
+	var patch_geo;
+    console.log(patch);
+	if (patch.type == 1) // geometry already given for polyhedron
+		patch_geo = patch.geometry;
+    else if(patch.type == 4 || patch.type == 5 || patch.type == 8)
+    	patch_geo = eval_tensor_product_patch([patch.degu,patch.degv],patch.pts,this.subdivisionLevel);
+		
     patch_geo.dynamic = true;
 
     // generate material
@@ -27,18 +35,24 @@ bvQuadPatch = function(patch,parameters){
     var uniforms = THREE.UniformsUtils.clone(bvshader.uniforms)
 
     var bvmaterial = new THREE.ShaderMaterial({
-	uniforms: THREE.UniformsUtils.clone(bvshader.uniforms), //uniforms,
-	attributes:     attributes,
-	vertexShader:   bvshader.vertexShader, // document.getElementById( 'vertexshader' ).textContent,
-	fragmentShader: bvshader.fragmentShader, // document.getElementById( 'fragmentshader' ).textContent,
-	lights:true
-	//vertexColors :THREE.VertexColors	
+		uniforms: THREE.UniformsUtils.clone(bvshader.uniforms), //uniforms,
+		attributes:     attributes,
+		vertexShader:   bvshader.vertexShader, // document.getElementById( 'vertexshader' ).textContent,
+		fragmentShader: bvshader.fragmentShader, // document.getElementById( 'fragmentshader' ).textContent,
+		lights:true
+		// vertexColors :THREE.VertexColors	
     });
 
     // initial the crv array
-    for(var i = 0; i < patch_geo.rawCrv.length; i++){
-	attributes.crv.value[i] = patch_geo.rawCrv[i];
-    }
+    if(patch_geo.rawCrv !== undefined)
+	for(var i = 0; i < patch_geo.rawCrv.length; i++){
+	    attributes.crv.value[i] = patch_geo.rawCrv[i];
+	}
+    else
+	for(var i = 0; i < patch_geo.vertices.length; i++){
+	    attributes.crv.value[i] = new THREE.Vector4();
+	}
+
 
     THREE.Mesh.call( this, patch_geo, bvmaterial );
     this.doubleSided = true;
@@ -47,37 +61,35 @@ bvQuadPatch = function(patch,parameters){
     this.updateAttributes();
 }
 
-bvQuadPatch.Normal = 0;
-bvQuadPatch.CurvatureColor = 1;
-bvQuadPatch.HighlightLine = 2;
-bvQuadPatch.ReflectionLine = 3;
+bvPatch.Normal = 0;
+bvPatch.CurvatureColor = 1;
+bvPatch.HighlightLine = 2;
+bvPatch.ReflectionLine = 3;
 
-bvQuadPatch.prototype = new THREE.Mesh();
-bvQuadPatch.prototype.constructor = bvQuadPatch;
+bvPatch.prototype = new THREE.Mesh();
+bvPatch.prototype.constructor = bvPatch;
 
-bvQuadPatch.prototype.getRenderMode = function(){
+bvPatch.prototype.getRenderMode = function(){
     return this.renderMode;
 }
 
-bvQuadPatch.prototype.setRenderMode = function(mode){
-
-
+bvPatch.prototype.setRenderMode = function(mode){
     if(this.renderMode == mode)
-	return;
+		return;
 
     this.renderMode = mode;
 
     switch(mode){
-    case bvQuadPatch.HighlightLine:
-    case bvQuadPatch.ReflectionLine:
-	this.updateHighlight();
-	break;
+		case bvPatch.HighlightLine:
+		case bvPatch.ReflectionLine:
+		this.updateHighlight();
+		break;
     }
 
     this.updateAttributes();
 }
 
-bvQuadPatch.prototype.setCurvatureRange = function(minc,maxc){
+bvPatch.prototype.setCurvatureRange = function(minc,maxc){
     for(var i = 0; i < 4; i++){
 	this.maxCrv[i] = isNaN(maxc[i])?1000:maxc[i];
 	this.minCrv[i] = isNaN(minc[i])?-1000:minc[i];
@@ -85,17 +97,18 @@ bvQuadPatch.prototype.setCurvatureRange = function(minc,maxc){
     this.updateAttributes();
 }
 
+
 // recalcuate highlight line
 // TODO: could be moved to pixel shader
-bvQuadPatch.prototype.updateHighlight = function(){
-    var highlightmode = this.renderMode == bvQuadPatch.HighlightLine? HIGHLIGHTLINE : REFLECTLINE;
+bvPatch.prototype.updateHighlight = function(){
+    var highlightmode = this.renderMode == bvPatch.HighlightLine? HIGHLIGHTLINE : REFLECTLINE;
     console.log(highlightmode);
     eval_highlight(highlightmode,this,this.material.attributes.hr_val.value);
     this.material.attributes.hr_val.needsUpdate = true;
 }
 
 // Should be called after change any of these values
-bvQuadPatch.prototype.updateAttributes = function(){
+bvPatch.prototype.updateAttributes = function(){
     // phong color attribute
     this.material.uniforms.diffuse.value.copy(this.color);
     this.material.uniforms.ambient.value.copy(this.ambient);
@@ -108,6 +121,7 @@ bvQuadPatch.prototype.updateAttributes = function(){
     this.material.uniforms.crvType.value = this.crvMode;
     this.material.uniforms.maxCrv.value.set(this.maxCrv[0],this.maxCrv[1],this.maxCrv[2],this.maxCrv[3]);
     this.material.uniforms.minCrv.value.set(this.minCrv[0],this.minCrv[1],this.minCrv[2],this.minCrv[3]);
+
 }
 
 bvshader = {
@@ -152,10 +166,11 @@ bvshader = {
 	//			THREE.ShaderChunk[ "lightmap_pars_vertex" ],
 	//			THREE.ShaderChunk[ "envmap_pars_vertex" ],
 	THREE.ShaderChunk[ "lights_phong_pars_vertex" ],
-	//THREE.ShaderChunk[ "color_pars_vertex" ],
+	// THREE.ShaderChunk[ "color_pars_vertex" ],
 	//			THREE.ShaderChunk[ "skinning_pars_vertex" ],
 	//			THREE.ShaderChunk[ "morphtarget_pars_vertex" ],
 	//			THREE.ShaderChunk[ "shadowmap_pars_vertex" ],
+
 	"vec3 crv2color(vec4 curvature){",
 	"  float maxc,minc,c;",
         " vec3 colors[5];",
@@ -258,7 +273,7 @@ bvshader = {
 	"uniform vec3 highlightLineColor;",
 	"uniform int renderMode;",
 
-	//THREE.ShaderChunk[ "color_pars_fragment" ],
+	// THREE.ShaderChunk[ "color_pars_fragment" ],
 	//			THREE.ShaderChunk[ "map_pars_fragment" ],
 	//			THREE.ShaderChunk[ "lightmap_pars_fragment" ],
 	//			THREE.ShaderChunk[ "envmap_pars_fragment" ],

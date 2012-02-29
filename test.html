@@ -43,17 +43,17 @@
 	<form>
 	  <div align="left"><br/>
 	    <input type="radio" name="renderMode" value="normal"
-		   onclick="setPatchRenderMode(bvQuadPatch.Normal);"
+		   onclick="setPatchRenderMode(bvPatch.Normal);"
 		   checked = "checked"> Normal<br>
 	    <input type="radio" name="renderMode" value="crv"
-		   onclick="setPatchRenderMode(bvQuadPatch.CurvatureColor);">
+		   onclick="setPatchRenderMode(bvPatch.CurvatureColor);">
 	    Curvature Color <br/>
 	    <input type="radio" name="renderMode" value="highlight"
-		   onclick="setPatchRenderMode(bvQuadPatch.HighlightLine);"
+		   onclick="setPatchRenderMode(bvPatch.HighlightLine);"
 		   >
 	    Highlight Line <br/>
 	    <input type="radio" name="renderMode" value="reflect"
-		   onclick="setPatchRenderMode(bvQuadPatch.ReflectionLine);">
+		   onclick="setPatchRenderMode(bvPatch.ReflectionLine);">
 	    Reflect Line <br/>
 	  </div>
 	</form>
@@ -67,8 +67,8 @@
 	<!-- The library for highlight/reflectline -->
 	<script src="js/highlight.js"></script>
 
-	<!-- The library for QuadPatch -->
-	<script src="js/bvQuadPatch.js"></script>
+	<!-- The library for Patch -->
+	<script src="js/bvPatch.js"></script>
 
 	<!-- The library for reading patches -->
 	<script src="js/read.js"></script>

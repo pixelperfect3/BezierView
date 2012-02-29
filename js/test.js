@@ -43,7 +43,7 @@ function init() {
       var patch = patches[i];
       
       // the meshes
-      patch_mesh = new bvQuadPatch(patch,{subdivisionLevel:5});
+      patch_mesh = new bvPatch(patch,{subdivisionLevel:5});
       // patch_mesh.scale.set(0.1,0.1,0.1);
       scene.add( patch_mesh );
       patch_mesh_list.push(patch_mesh);
@@ -195,11 +195,11 @@ function toggle_curvature() {
 }
 
 function toggle_highlight() {
-    if(current_mesh.getRenderMode() == bvQuadPatch.HighlightLine){
-	current_mesh.setRenderMode(bvQuadPatch.ReflectionLine);
+    if(current_mesh.getRenderMode() == bvPatch.HighlightLine){
+	current_mesh.setRenderMode(bvPatch.ReflectionLine);
     }
     else
-	current_mesh.setRenderMode(bvQuadPatch.HighlightLine);
+	current_mesh.setRenderMode(bvPatch.HighlightLine);
 }
 
 function setPatchRenderMode(mode){
