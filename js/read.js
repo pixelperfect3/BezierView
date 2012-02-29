@@ -87,19 +87,22 @@ function read_polyhedron(parser) {
 		if (verts == 4)
 			v4 = parser.nextInt();
 			
-		// calculate face normal
-		var nv1 = new THREE.Vector4().sub(geo.vertices[v2].position, geo.vertices[v1].position);
+		// calculate face normal (not needed - THREE.js provides utility)
+		/*var nv1 = new THREE.Vector4().sub(geo.vertices[v2].position, geo.vertices[v1].position);
 		var nv2 = new THREE.Vector4().sub(geo.vertices[v3].position, geo.vertices[v1].position);
 		var n = VVcross(nv2, nv1);
 		var normal = new THREE.Vector3(n.x, n.y, n.z); // need to convert Vector4 to Vector3
 		
-		console.log("Normal: " + normal.x + "," + normal.y + "," + normal.z);
+		console.log("Normal: " + normal.x + "," + normal.y + "," + normal.z);*/
 		
 		if (verts == 3)
-			geo.faces.push(new THREE.Face3(v1, v2, v3, normal));
+			geo.faces.push(new THREE.Face3(v1, v2, v3));//, normal));
 		else // 4
-			geo.faces.push(new THREE.Face4(v1, v2, v3, v4, normal));
+			geo.faces.push(new THREE.Face4(v1, v2, v3, v4));//, normal));
 	}
+	
+	geo.computeFaceNormals();
+	geo.computeVertexNormals();
 	
 	return {"type": 1, "degs":[numFaces, numVertices], "pts": geo};
 }
