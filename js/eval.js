@@ -112,7 +112,7 @@ function evalPN(v00, v01, v10, P, N)
 TODO: 
 -Check type
  **/
-function eval_patch(type, degs,vecs,subDepth){
+function eval_patch(patch, subDepth){
 	var     size;
 	var     Cu, Cv, st, C;
 	var     sizeu, sizev, bigstepu, bigstepv, degu, degv;
@@ -120,11 +120,16 @@ function eval_patch(type, degs,vecs,subDepth){
 	var  	  h;
 	var     bb;
 
-	degu = degs[0];
-	degv = degs[1];
+	var type = patch.type;
+	var vecs = patch.pts;
+	
+	var degu = patch.degu;
+	var degv = patch.degv;
 
 	// TODO: Handle all cases
-	if (type != 4)
+	if (type == 1) // polyhedron
+		return patch.pts;
+	else if (type != 4)
 		return new THREE.Geometry();
 
 	var pts  = 1 << subDepth;

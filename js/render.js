@@ -49,7 +49,7 @@ function init() {
 	for(var i = 0; i < patches.length; i++){
 
 		// the meshes
-		var patch_mesh = new bvPatch(patches[i].type, patches[i].degs, patches[i].pts, {subdivisionLevel: subdivision_level});
+		var patch_mesh = new bvPatch(patches[i], {subdivisionLevel: subdivision_level});
 		/*switch(patches[i].type) {
 		  case 4:
 		  patch_mesh = new bvPatch(patches[i].pts, {subdivisionLevel: subdivision_level});

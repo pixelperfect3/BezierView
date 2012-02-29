@@ -134,7 +134,7 @@ function read_tensor_product(type,parser){
 		}
 	}
 
-	return {"type":type,"degs":[degu, degv], "pts":vecs};
+	return {"type":type,"degu": degu, "degv": degv, "pts":vecs};
 }
 
 // The parser object
