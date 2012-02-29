@@ -1,6 +1,6 @@
 /* Variables for the scene */
 var camera, scene, renderer,
- geometry, material, regular_material, curvature_material, controls, pointLight;
+    geometry, material, regular_material, curvature_material, controls, pointLight;
 
 // the meshes
 var patch_mesh, curvature_mesh, current_mesh;
@@ -11,201 +11,228 @@ show_controlMesh = true;
 show_patch = true;
 show_curvature = false;
 
+var subdivision_level = 5;
+
 bvstr = "";
 
-var test_url = "data/tp3x3.bv";
+var test_url = "data/dtorus.bv";//tp3x3.bv";
 
 /* get the data */
 $.get(test_url, function(data) {
-        bvstr = data;
-        init();
-        animate();
-      })
-  .error(function() {
-           alert('Error reading ' + test_url);
-  });
+		bvstr = data;
+		init();
+		animate();
+		})
+.error(function() {
+		alert('Error reading ' + test_url);
+		});
 
 
 /** The initialization function **/
 function init() {
 
-    // console.log(bvstr);
-  // geo.computeBoundingSphere();
+	// console.log(bvstr);
+	// geo.computeBoundingSphere();
 
-  scene = new THREE.Scene();
-  
-  var patches = read_quad_bezier_from_string(bvstr);
-  
-  init_crv();
- 
-  for(var i = 0; i < patches.length; i++){
-    var patch = patches[i];
-    // console.log(patch);
-    geometry = eval_patch([patch[0],patch[0]],patch[1],5);
-	//geometry.dynamic = true;
-	
-	// material
-    curvature_material = new THREE.MeshBasicMaterial( {  shading: THREE.SmoothShading, vertexColors: THREE.VertexColors, wireframe: false} );
-	regular_material = new THREE.MeshPhongMaterial( { color: 0xff0000, specular:0xffffff, shininess:50, wireframe: false} );
-	
-	// the meshes
-    patch_mesh = new THREE.Mesh( geometry, regular_material);
-	patch_mesh.doubleSided = true;
-    patch_mesh.scale.set(0.5,0.5,0.5);
-	//scene.add( patch_mesh );
-	
-	/** CURVATURE Hack - have to recreate geometry and use a different mesh. Probably not the most efficient way **/
-	var geometry_curvature = eval_patch([patch[0],patch[0]],patch[1],5);
-	curvature_mesh = new THREE.Mesh( geometry_curvature, curvature_material);
-	curvature_mesh.doubleSided = true;
-    curvature_mesh.scale.set(0.5,0.5,0.5);
-	
-	scene.add( patch_mesh );
-	scene.add( curvature_mesh );
-	
-	curvature_mesh.visible = false; // initially invisible
-   	
-	// Which mesh are we currently looking at?
-	current_mesh = patch_mesh;
-	
-	// TODO: For multiple patches
-	/*patches.push(new THREE.Mesh(geo, patch_material));
-	alert("Patch: " + patches[i]);
-	patches[i].doubleSided = true;
-	patches[i].scale.set(0.5,0.5,0.5);*/
-	//patches_mesh.push(patch_mesh);
-	//alert(patches);
-	
-	// control mesh
-	var control_geometry = eval_control_mesh([patch[0],patch[0]],patch[1]);
-	control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
-	control_mesh.doubleSided = true;
-	control_mesh.scale.set(0.5,0.5,0.5);
-	//scene.add(control_mesh);
-	if (show_controlMesh)
-		scene.add(control_mesh);	
-  }
+	scene = new THREE.Scene();
 
+	// Get all the patch info (type, degree, control points, etc.)
+	var patches = read_patches_from_string(bvstr);
 
-  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 10000 );
-  camera.position.z = 6;
-  scene.add( camera );
+	// initialize curvature
+	init_crv();
 
-  // control_geometry = eval_control_mesh([vecs[0],vecs[0]],vecs[1]);
-  // control_geometry.dynamic = true;
-  // control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
-  // control_mesh.doubleSided = true;
-  // scene.add(control_mesh);
+	// all the meshes
+	patch_meshes = [];
+	control_meshes = [];
 
-  // Light
-  pointLight1 = new THREE.PointLight( 0xffffff );
-  pointLight1.position.x = 360;
-  pointLight1.position.z = 360;
+	for(var i = 0; i < patches.length; i++){
 
-  scene.add( pointLight1 );
+		// the meshes
+		var patch_mesh = new bvPatch(patches[i], {subdivisionLevel: subdivision_level});
+		/*switch(patches[i].type) {
+		  case 4:
+		  patch_mesh = new bvPatch(patches[i].pts, {subdivisionLevel: subdivision_level});
+		  }*/
 
-  pointLight2 = new THREE.PointLight( 0xffffff );
-  pointLight2.position.x = -360;
-  pointLight2.position.z = 0;
+		patch_mesh.scale.set(0.5,0.5,0.5);	
+		scene.add( patch_mesh );
+		patch_meshes.push(patch_mesh); // add to the list
 
-  scene.add( pointLight2 );
+		// Which mesh are we currently looking at? TODO: Need to handle multiple patches
+		current_mesh = patch_mesh;
 
-  renderer = new THREE.WebGLRenderer();
-  renderer.sortObjects = false;
-  //renderer = new THREE.CanvasRenderer();
-  renderer.setSize( window.innerWidth, window.innerHeight );
-  renderer.setFaceCulling(false) ;
+		// TODO: For multiple patches
+		/*patches.push(new THREE.Mesh(geo, patch_material));
+		  alert("Patch: " + patches[i]);
+		  patches[i].doubleSided = true;
+		  patches[i].scale.set(0.5,0.5,0.5);*/
+		//patches_mesh.push(patch_mesh);
+		//alert(patches);
 
-  controls = new THREE.TrackballControls( camera, renderer.domElement );
-  controls.rotateSpeed = 1.0;
-  controls.zoomSpeed = 1.2;
-  controls.panSpeed = 0.2;
+		// control mesh
+		var control_geometry;
+		if (patches[i].type == 1) // polyhedron
+			control_geometry = patches[i].geometry;
+		else
+			control_geometry = eval_control_mesh(patches[i].type, [patches[i].degu,patches[i].degv], patches[i].pts);
+		control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
+		control_mesh.doubleSided = true;
+		control_mesh.scale.set(0.5,0.5,0.5);
+		scene.add(control_mesh);
+		control_meshes.push(control_mesh);
+	}
 
-  controls.noZoom = false;
-  controls.noPan = false;
+	// Set's the curvature's range after generating all the patches [min and max]
+	// TODO: Set range by slider interface
+	setPatchCurvatureRange([min_crv.x,min_crv.y,min_crv.z,min_crv.w],[max_crv.x,max_crv.y,max_crv.z,max_crv.w]);
 
-  controls.staticMoving = false;
-  controls.dynamicDampingFactor = 0.3;
+	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 10000 );
+	camera.position.z = 6;
+	scene.add( camera );
 
-  var radius = 2;
-  controls.minDistance = radius * 1.1;
-  controls.maxDistance = radius * 100;
+	// control_geometry = eval_control_mesh([vecs[0],vecs[0]],vecs[1]);
+	// control_geometry.dynamic = true;
+	// control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
+	// control_mesh.doubleSided = true;
+	// scene.add(control_mesh);
 
-  document.body.appendChild( renderer.domElement );
+	// Light
+
+	pointLight1 = new THREE.PointLight( 0xffffff );
+	pointLight1.position.x = 360;
+	pointLight1.position.z = 360;
+
+	scene.add( pointLight1 );
+
+	pointLight2 = new THREE.PointLight( 0xffffff );
+	pointLight2.position.x = -360;
+	pointLight2.position.z = 0;
+
+	scene.add( pointLight2 );
+
+	renderer = new THREE.WebGLRenderer();
+	renderer.sortObjects = false;
+	//renderer = new THREE.CanvasRenderer();
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.setFaceCulling(false) ;
+
+	controls = new THREE.TrackballControls( camera, renderer.domElement );
+	controls.rotateSpeed = 1.0;
+	controls.zoomSpeed = 1.2;
+	controls.panSpeed = 0.2;
+
+	controls.noZoom = false;
+	controls.noPan = false;
+
+	controls.staticMoving = false;
+	controls.dynamicDampingFactor = 0.3;
+
+	var radius = 2;
+	controls.minDistance = radius * 1.1;
+	controls.maxDistance = radius * 100;
+
+	document.body.appendChild( renderer.domElement );
 
 
 }
 
-
 /** the loop function **/
 function animate() {
 
-  // note: three.js includes requestAnimationFrame shim
-  controls.update();
-  requestAnimationFrame( animate );
-  render();
+	// note: three.js includes requestAnimationFrame shim
+	controls.update();
+	requestAnimationFrame( animate );
+	render();
 
 }
 
 /** the main render function **/
 function render() {
-  renderer.render( scene, camera );
+	renderer.render( scene, camera );
 
 }
 
+// Sets the render mode of the patches
+function setRenderMode(mode) {
+	// update for each mesh
+	for (var i = 0; i < patch_meshes.length; i++)
+		patch_meshes[i].setRenderMode(mode);
+}
+
+// toggle viewing control meshes
+function toggle_controlMesh() {
+	show_controlMesh = !show_controlMesh;
+	for (var i = 0; i < control_meshes.length; i++) 
+		if (show_controlMesh)
+			control_meshes[i].visible = true;
+		else
+			control_meshes[i].visible = false;
+}
+
+// toggle viewing patches
+function toggle_patches() {
+	show_patch = !show_patch;
+	for (var i = 0; i < patch_meshes.length; i++) 
+		if (show_patch)
+			patch_meshes[i].visible = true;
+		else
+			patch_meshes[i].visible = false;
+}
+
+// set the curvature scale range
+function setPatchCurvatureRange(minc,maxc){
+	for(var i = 0; i < patch_meshes.length; i++){
+		patch_meshes[i].setCurvatureRange(minc,maxc);
+	}    
+}
+
+
+// OLD CODE:
 /** keypresses **/
-$(document).keypress(function(evt) {
-	// get the character
-	var ch = String.fromCharCode(evt.keyCode);
-	switch(ch) {
-		case 'm': // control mesh
-			toggle_controlMesh();
-			break;
-		case 'p': // patches
-			toggle_patches();
-			break;
-		case 'c': // curvature
-			toggle_curvature();
-			//toggle_patches();
-			break;
-		default:
-			break;
-		// TODO: Add for curvature, patches, etc.
-	}
+/*$(document).keypress(function(evt) {
+// get the character
+var ch = String.fromCharCode(evt.keyCode);
+switch(ch) {
+case 'm': // control mesh
+toggle_controlMesh();
+break;
+case 'p': // patches
+toggle_patches();
+break;
+case 'c': // curvature
+change_color();//toggle_curvature();
+//toggle_patches();
+break;
+default:
+break;
+// TODO: Add for curvature, patches, etc.
+}
 }
 );
 
-// toggle variables - callbacks for keypresses and checkboxes
-function toggle_controlMesh() {
-	show_controlMesh = !show_controlMesh;
-	if (show_controlMesh)
-		control_mesh.visible = true;//scene.add(control_mesh);	
-  	else
-  		control_mesh.visible = false;//scene.remove(control_mesh);
-}
-
-function toggle_patches() {
-	show_patch = !show_patch;
-	// show patches?
-  	if (show_patch)
-		current_mesh.visible = true;//scene.add(patch_mesh);	
-  	else
-  		current_mesh.visible = false;//scene.remove(patch_mesh);	
-}
-
 function toggle_curvature() {
-	show_curvature = !show_curvature;
-	//patch_mesh.visible = false;
-	//curvature_mesh.visible = true;
-	current_mesh.visible = false;
-	if (show_curvature) {
-		current_mesh = curvature_mesh;
-	}
-	else
-		current_mesh = patch_mesh;
-	
-	// is it visible?
-	if (show_patch)
-		current_mesh.visible = true;//scene.add(patch_mesh);	*/
+show_curvature = !show_curvature;
+//patch_mesh.visible = false;
+//curvature_mesh.visible = true;
+current_mesh.visible = false;
+if (show_curvature) {
+current_mesh = curvature_mesh;
 }
+else
+current_mesh = patch_mesh;
+
+// is it visible?
+if (show_patch)
+current_mesh.visible = true;//scene.add(patch_mesh);	
+}
+
+function toggle_highlight() {
+if(current_mesh.getRenderMode() == bvQuadPatch.HighlightLine){
+current_mesh.setRenderMode(bvQuadPatch.ReflectionLine);
+}
+else
+current_mesh.setRenderMode(bvQuadPatch.HighlightLine);
+}*/
+
 
