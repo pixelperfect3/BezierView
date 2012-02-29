@@ -23,37 +23,37 @@ bvPatch = function(patch,parameters){
 
 	// generate material
 	var attributes = {
-crv:{type: 'v4',value: [] },
-    hr_val: {type: 'f', value: [] }
+		crv:{type: 'v4',value: [] },
+		hr_val: {type: 'f', value: [] }
 	};
 
 	var uniforms = THREE.UniformsUtils.clone(bvshader.uniforms)
 
-		var bvmaterial = new THREE.ShaderMaterial({
-uniforms: THREE.UniformsUtils.clone(bvshader.uniforms), //uniforms,
-attributes:     attributes,
-vertexShader:   bvshader.vertexShader, // document.getElementById( 'vertexshader' ).textContent,
-fragmentShader: bvshader.fragmentShader, // document.getElementById( 'fragmentshader' ).textContent,
-lights:true
-// vertexColors :THREE.VertexColors	
-});
+	var bvmaterial = new THREE.ShaderMaterial({
+		uniforms: THREE.UniformsUtils.clone(bvshader.uniforms), //uniforms,
+		attributes:     attributes,
+		vertexShader:   bvshader.vertexShader, // document.getElementById( 'vertexshader' ).textContent,
+		fragmentShader: bvshader.fragmentShader, // document.getElementById( 'fragmentshader' ).textContent,
+		lights:true
+		// vertexColors :THREE.VertexColors	
+	});
 
-// initial the crv array
-if(patch_geo.rawCrv !== undefined)
-	for(var i = 0; i < patch_geo.rawCrv.length; i++){
-		attributes.crv.value[i] = patch_geo.rawCrv[i];
-	}
-else
-for(var i = 0; i < patch_geo.vertices.length; i++){
-	attributes.crv.value[i] = new THREE.Vector4();
-}
+	// initial the crv array
+	if(patch_geo.rawCrv !== undefined)
+		for(var i = 0; i < patch_geo.rawCrv.length; i++){
+			attributes.crv.value[i] = patch_geo.rawCrv[i];
+		}
+	else
+		for(var i = 0; i < patch_geo.vertices.length; i++){
+			attributes.crv.value[i] = new THREE.Vector4();
+		}
 
 
 THREE.Mesh.call( this, patch_geo, bvmaterial );
-this.doubleSided = true;
+	this.doubleSided = true;
 
-this.setRenderMode(this.renderMode);
-this.updateAttributes();
+	this.setRenderMode(this.renderMode);
+	this.updateAttributes();
 }
 
 bvPatch.Normal = 0;
