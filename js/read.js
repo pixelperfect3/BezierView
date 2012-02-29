@@ -22,10 +22,13 @@ function read_patches_from_string(str){
 
 		// figure out which one to parse
 		switch(type){
-			case 1: // polyhedron
+			case 1: 									// polyhedron
 				patches.push(read_polyhedron(parser));
 				break;
-			case 4:
+			case 3:										// triangular bezier
+				patches.push(read_triangular(parser));
+				break;
+			case 4: 									// tensor-product
 			case 5:
 			case 8:
 				patches.push(read_tensor_product(type,parser));
@@ -38,9 +41,9 @@ function read_patches_from_string(str){
 }
 
 /** Handles polyhedron patch
-  Type 1
+    Type 1
 
-  -Generates geometry directly
+	-Generates geometry directly
  **/
 function read_polyhedron(parser) {
 	// number of faces and vertices
@@ -48,21 +51,6 @@ function read_polyhedron(parser) {
 
 	numVertices = parser.nextInt();
 	numFaces = parser.nextInt();
-
-
-	// read all the vertices
-	/*vertices = []
-	  for (var i = 0; i < numVertices; i++)
-	  vertices.push(read_vec3(parser));
-
-	// all the faces
-	// TODO: Currently inefficient. It is reading each vertex multiple times
-	faces = []
-	for (var i = 0; i < numFaces; i++) {
-	var verts = parser.nextInt(); // how many vertices in that face?
-	for (var j = 0; j < verts; j++)
-	faces.push(vertices[parser.nextInt()]);
-	}*/
 
 	// Construct the geometry directly
 	var geo = new THREE.Geometry();
@@ -79,36 +67,46 @@ function read_polyhedron(parser) {
 		var verts = parser.nextInt();
 
 		// vertex indices
-		var v1, v2, v3, v4;
-		v1 = parser.nextInt();
-		v2 = parser.nextInt();
-		v3 = parser.nextInt();
-
-		if (verts == 4)
-			v4 = parser.nextInt();
-
-		// calculate face normal (not needed - THREE.js provides utility)
-		/*var nv1 = new THREE.Vector4().sub(geo.vertices[v2].position, geo.vertices[v1].position);
-		  var nv2 = new THREE.Vector4().sub(geo.vertices[v3].position, geo.vertices[v1].position);
-		  var n = VVcross(nv2, nv1);
-		  var normal = new THREE.Vector3(n.x, n.y, n.z); // need to convert Vector4 to Vector3
-
-		  console.log("Normal: " + normal.x + "," + normal.y + "," + normal.z);*/
+		var v1 = parser.nextInt();
+		var v2 = parser.nextInt();
+		var v3 = parser.nextInt();
 
 		if (verts == 3)
-			geo.faces.push(new THREE.Face3(v1, v2, v3));//, normal));
-		else // 4
-			geo.faces.push(new THREE.Face4(v1, v2, v3, v4));//, normal));
+			geo.faces.push(new THREE.Face3(v1, v2, v3));
+		else { 				// 4
+			var v4 = parser.nextInt();
+			geo.faces.push(new THREE.Face4(v1, v2, v3, v4));
+		}
 	}
 
+	// compute normals
 	geo.computeFaceNormals();
 	geo.computeVertexNormals();
 
 	return {"type": 1, "geometry": geo};
 }
 
+
+/** Handles triangular bezier patches
+	Type 3
+ **/
+function read_triangular(parser) {
+	// The degree
+	var degu;
+
+	deg = parser.nextInt();
+
+	// read all the control points
+	var vecs = [];
+	for(var i = 0; i < (deg+2) * (deg+1)/2; i++){
+		vecs.push(read_vec3(parser));
+	}
+
+	return {"type":type,"deg":deg, "pts":vecs};
+}
+
 /** Handles tensor-product patches
-  Types 4, 5 and 8 for now 
+    Types 4, 5 and 8 for now 
  **/
 function read_tensor_product(type,parser){
 	// The degree in the u and v directionm
@@ -199,58 +197,3 @@ function trim(str){
 	return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
 }
 
-// TODO: Old code which should be removed
-// read function
-function read_quad_bezier_from_string(str){
-	var x,y,z,w;
-	var lines = str.split('\n');
-	// console.log(lines);
-
-	var patches = [];
-
-	//  for(var i = 1; i < lines.length; i++){
-	var i = 0;
-	while(i < lines.length){
-		var vecs = [];
-		var line = trim(lines[i]);
-
-		if(line.length == 0){
-			i++;
-			continue;
-		}
-
-		var segs = trim(lines[i]).split(/\ +/);
-		var deg;
-
-		deg = parseInt(segs[1]);
-
-		i++;
-		//alert('reading patch of degree' + deg);
-		var j = 0;
-		while(j < (deg+1)*(deg+1)){
-			line = trim(lines[i]);
-
-			if(line.length == 0){
-				i++;
-				continue;
-			}
-
-			var coords = trim(line).split(/\ +/);
-
-			x = parseFloat(coords[0]);
-			y = parseFloat(coords[1]);
-			z = parseFloat(coords[2]);
-
-			if(coords.length > 3)
-				w = parseFloat(coords[3]);
-			else
-				w = 1.0;
-			vecs.push(new THREE.Vector4(x,y,z,w));
-			j++;
-			i++;
-		}
-		patches.push([deg,vecs]);
-	}
-	//  console.log(patches);
-	return patches;
-}
