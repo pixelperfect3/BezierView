@@ -15,7 +15,7 @@ var subdivision_level = 5;
 
 bvstr = "";
 
-var test_url = "data/dtorus.bv";//tp3x3.bv";
+var test_url = "data/tri1.bv";//dtorus.bv";//tp3x3.bv";
 
 /* get the data */
 $.get(test_url, function(data) {
