@@ -13,7 +13,7 @@ show_curvature = false;
 
 bvstr = "";
 
-var test_url = "data/dtorus.bv";
+var test_url = "data/cube.bv";
 
 /* get the data */
 $.get(test_url, function(data) {
@@ -31,7 +31,7 @@ function init() {
 
     // console.log(bvstr);
   // geo.computeBoundingSphere();
-
+	
   scene = new THREE.Scene();
   
   var patches = read_patches_from_string(bvstr);
