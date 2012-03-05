@@ -16,6 +16,8 @@ bvPatch = function(patch,parameters){
 	this.minCrv = parameters.minCrv !== undefined ? parameters.minCrv.slice() : [-1000,-1000,-1000,-1000];
 	this.crvType = parameters.crvType !== undefined ? parameters.crvType : 0;
 
+	this.hl_step = parameters.hl_step != undefined ? parameters.hl_step : 5.0;
+
 	// generate geometry
 	var patch_geo = eval_patch(patch, this.subdivisionLevel);
 
@@ -23,8 +25,8 @@ bvPatch = function(patch,parameters){
 
 	// generate material
 	var attributes = {
-		crv:{type: 'v4',value: [] },
-		hr_val: {type: 'f', value: [] }
+		crv:{type: 'v4',value: [] }
+//		hr_val: {type: 'f', value: [] }
 	};
 
 	var uniforms = THREE.UniformsUtils.clone(bvshader.uniforms)
@@ -94,12 +96,18 @@ bvPatch.prototype.setCurvatureRange = function(minc,maxc){
 
 
 // recalcuate highlight line
-// TODO: could be moved to pixel shader
 bvPatch.prototype.updateHighlight = function(){
-	var highlightmode = this.renderMode == bvPatch.HighlightLine? HIGHLIGHTLINE : REFLECTLINE;
-	console.log(highlightmode);
-	eval_highlight(highlightmode,this,this.material.attributes.hr_val.value);
-	this.material.attributes.hr_val.needsUpdate = true;
+	// var highlightmode = this.renderMode == bvPatch.HighlightLine? HIGHLIGHTLINE : REFLECTLINE;
+	// console.log(highlightmode);
+	// eval_highlight(highlightmode,this,this.material.attributes.hr_val.value);
+	// this.material.attributes.hr_val.needsUpdate = true;
+
+	// TODO: pretty laggy when recalculate the directions, especially when the
+	//       number of patches is big. Maybe should calculate this outside patch once
+	//       and pass in same A and H for all patches. Do it here for simply interface.
+
+	// update dirH and dirA
+	calc_HA(this,this.material.uniforms.dirA.value,this.material.uniforms.dirH.value)
 }
 
 // Should be called after change any of these values
@@ -110,14 +118,17 @@ bvPatch.prototype.updateAttributes = function(){
 	this.material.uniforms.specular.value.copy(this.specular);
 	this.material.uniforms.shininess.value = this.shininess;
 
+	//render mode 
 	this.material.uniforms.renderMode.value = this.renderMode;
-	this.material.uniforms.highlightLineColor.value.copy(this.highlightLineColor);
 
+	// curvature relate
 	this.material.uniforms.crvType.value = this.crvMode;
 	this.material.uniforms.maxCrv.value.set(this.maxCrv[0],this.maxCrv[1],this.maxCrv[2],this.maxCrv[3]);
 	this.material.uniforms.minCrv.value.set(this.minCrv[0],this.minCrv[1],this.minCrv[2],this.minCrv[3]);
 
-	//this.material.uniforms.dirH.value.set(1,1,1,1);
+	// highlight line relate
+	this.material.uniforms.highlightLineColor.value.copy(this.highlightLineColor);
+	this.material.uniforms.hl_step.value = this.hl_step;
 
 }
 
@@ -140,11 +151,9 @@ bvshader = {
 			"maxCrv": {type: "v4", value: new THREE.Vector4(1000,1000,1000,1000) },
 			"minCrv": {type: "v4", value: new THREE.Vector4(-1000,-1000,-1000,-1000) },
 			"crvType": {type: "i", value: 0},
-			"hl_step": {type: "f", value: 1.0},
+			"hl_step": {type: "f", value: 5.0},
 			"dirA": {type: "v4", value: new THREE.Vector4(0.0, 0.0, 46.0, 1.0) },
-			"dirH": {type: "v4", value: new THREE.Vector4(0.0, 1.0, 0.0,  1.0) },
-			"highlightMode": {type: "i" ,value: 1},
-			"hl_step": {type: "f", value:5.0}
+			"dirH": {type: "v4", value: new THREE.Vector4(0.0, 1.0, 0.0,  1.0) }
 		},
 		// {
 		// 	"renderMode": {type: "i" ,value: 1}
@@ -159,8 +168,8 @@ bvshader = {
 		"varying vec3 vFixedNormal;",
 		"varying vec3 vColor;",
 		"varying vec4 vPos;",
-		"varying float p_hr_val;",
-		"attribute float hr_val;",
+		//"varying float p_hr_val;",
+		//"attribute float hr_val;",
 		"attribute vec4 crv;",
 		"uniform int renderMode;",
 		"uniform int crvMode;",
@@ -260,7 +269,7 @@ bvshader = {
 		//				THREE.ShaderChunk[ "morphtarget_vertex" ],
 		THREE.ShaderChunk[ "default_vertex" ],
 		//				THREE.ShaderChunk[ "shadowmap_vertex" ],
-		"p_hr_val = hr_val;",
+		// "p_hr_val = hr_val;",
 
 		"}"
 
@@ -274,10 +283,9 @@ bvshader = {
 		"uniform vec3 ambient;",
 		"uniform vec3 specular;",
 		"uniform float shininess;",
-
 		"uniform vec3 highlightLineColor;",
+
 		"uniform int renderMode;",
-		"uniform int highlightMode;",
 		"uniform vec4 dirA;",
 		"uniform vec4 dirH;",
 		"uniform float hl_step;",
@@ -288,7 +296,7 @@ bvshader = {
 		//			THREE.ShaderChunk[ "fog_pars_fragment" ],
 		THREE.ShaderChunk[ "lights_phong_pars_fragment" ],
 		//			THREE.ShaderChunk[ "shadowmap_pars_fragment" ],
-		"varying float p_hr_val;",
+		//"varying float p_hr_val;",
 		"varying vec3 vColor;",
 		"varying vec4 vPos;",
 		"varying vec3 vFixedNormal;",
@@ -297,12 +305,12 @@ bvshader = {
 		" vec3 normal = normalize( vFixedNormal );",
 		" vec3 pos = vPos.xyz/vPos.w;",
 		" vec3 A = dirA.xyz;",
-		" vec3 H = (dirH).xyz;",
+		" vec3 H = dirH.xyz;",
 		//" vec3 ref_light = reflect((pos-A),normal);",
-		"  if(highlightMode == 0){", // highlight mode
-		"     A = dirA.xyz;",
+		"  if(renderMode == 2){", // highlight mode
+		//"     A = dirA.xyz;",
 		"  }",
-		"  else{",    //reflection light
+		"  else if(renderMode == 3){",    //reflection light
 		"    normal = reflect(normalize(pos-dirA.xyz),normal);", 
 		"  }",
 		"  vec3 temp = cross(H,normal);",
@@ -324,7 +332,7 @@ bvshader = {
 		"  if(renderMode == 2 || renderMode == 3){",
 		//"    float temp = fract(p_hr_val);",
 		"    float temp = fract(cal_highlight()/hl_step);",
-//		"      gl_FragColor = vec4(temp,temp,temp,1.0);",
+		//"      gl_FragColor = vec4(temp,temp,temp,1.0);",
 		"    if(temp > 1.0/3.0 && temp < 2.0/3.0){",
 		"      gl_FragColor = vec4(highlightLineColor,1.0);",
 		"    }",
@@ -337,9 +345,6 @@ bvshader = {
 		// THREE.ShaderChunk[ "color_fragment" ],
 		"gl_FragColor = vec4( vColor, opacity );",
 		"}",
-		//"float tt = length(reflect((vPos.xyz-dirA.xyz),vFixedNormal))/100.0;",
-		//"gl_FragColor = vec4(tt,tt,tt,1.0);",
-		//"gl_FragColor = vec4((vPos.xyz-dirA.xyz),1.0);",
 		//				THREE.ShaderChunk[ "envmap_fragment" ],
 		//				THREE.ShaderChunk[ "shadowmap_fragment" ],
 

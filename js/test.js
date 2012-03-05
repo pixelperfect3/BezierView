@@ -13,7 +13,7 @@ show_curvature = false;
 
 bvstr = "";
 
-var test_url = "data/cube.bv";
+var test_url = "data/dtorus.bv";
 
 /* get the data */
 $.get(test_url, function(data) {
@@ -175,7 +175,7 @@ function toggle_patches() {
   	if (show_patch)
 		current_mesh.visible = true;//scene.add(patch_mesh);	
   	else
-  		current_mesh.visible = false;//scene.remove(patch_mesh);	
+  		current_mesh.visible = false;//scene.remove(patch_mesh);
 }
 
 function toggle_curvature() {
@@ -196,20 +196,27 @@ function toggle_curvature() {
 
 function toggle_highlight() {
     if(current_mesh.getRenderMode() == bvPatch.HighlightLine){
-	current_mesh.setRenderMode(bvPatch.ReflectionLine);
+		current_mesh.setRenderMode(bvPatch.ReflectionLine);
     }
     else
-	current_mesh.setRenderMode(bvPatch.HighlightLine);
+		current_mesh.setRenderMode(bvPatch.HighlightLine);
 }
 
 function setPatchRenderMode(mode){
     for(var i = 0; i < patch_mesh_list.length; i++){
-	patch_mesh_list[i].setRenderMode(mode);
+		patch_mesh_list[i].setRenderMode(mode);
     }
 }
 
 function setPatchCurvatureRange(minc,maxc){
     for(var i = 0; i < patch_mesh_list.length; i++){
-	patch_mesh_list[i].setCurvatureRange(minc,maxc);
+		patch_mesh_list[i].setCurvatureRange(minc,maxc);
+    }    
+}
+
+function setHLStep(step){
+    for(var i = 0; i < patch_mesh_list.length; i++){
+		patch_mesh_list[i].hl_step = step;
+		patch_mesh_list[i].updateAttributes();
     }    
 }
