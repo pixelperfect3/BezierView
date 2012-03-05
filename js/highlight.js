@@ -121,17 +121,11 @@ function Solve4(A, x)
 }
 
 
-////////////////////////////////////////////////////////////////
-//
-//  plot the high light
-//
-
-function eval_highlight(highlight_type, patch, funcs) {
+function calc_HA(patch,A,H) {
 	var array_A = [0.0,  0.0, 40.0, 1.0];
 	var array_H = [0.0,  1.0,  0.0, 0.0];
 	var mv_matrix = new Array(16);
 	var eye = new THREE.Vector4(0, 0, 1000,1);
-	var A,H;
 
 	if(patch._modelViewMatrix == undefined){
 		var temp_matrix = new THREE.Matrix4();
@@ -140,12 +134,26 @@ function eval_highlight(highlight_type, patch, funcs) {
 	else
 		patch._modelViewMatrix.flattenToArray(mv_matrix);
 
-	console.log(mv_matrix);
+
 	Solve4(mv_matrix, array_A);
 	Solve4(mv_matrix, array_H);
 
-	A = new THREE.Vector4(array_A[0],array_A[1],array_A[2],array_A[3]);
-	H = new THREE.Vector4(array_H[0],array_H[1],array_H[2],array_H[3]);
+	A.set(array_A[0],array_A[1],array_A[2],array_A[3]);
+	H.set(array_H[0],array_H[1],array_H[2],array_H[3]);
+}
+
+////////////////////////////////////////////////////////////////
+//
+//  plot the high light
+//
+
+function eval_highlight(highlight_type, patch, funcs) {
+	var eye = new THREE.Vector4(0, 0, 1000,1);
+
+	var A = new THREE.Vector4();
+	var H = new THREE.Vector4();
+
+	calc_HA(patch,A,H);
 
 	// calculate the highlight values according to point and normal
 	for(var i = 0; i < patch.geometry.faces.length; i++)
