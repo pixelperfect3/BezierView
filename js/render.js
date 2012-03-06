@@ -15,90 +15,40 @@ var subdivision_level = 5;
 
 bvstr = "";
 
-var test_url = "data/tri1.bv";//dtorus.bv";//tp3x3.bv";
+/** Mesh files **/
+var polyhedron 	= "data/cube.bv";
+var default_mesh = polyhedron;
+var bicubic 	= "data/tp3x3.bv";
+var rational 	= "data/dtorus.bv";
+var triangular 	= "data/tri1.bv";
+
+/** render mode **/
+var render_mode = bvPatch.normal;
 
 /* get the data */
-$.get(test_url, function(data) {
+$.get(default_mesh, function(data) {
 		bvstr = data;
 		init();
 		animate();
-		})
-.error(function() {
+	})
+	.error(function() {
 		alert('Error reading ' + test_url);
-		});
-
+	});
 
 /** The initialization function **/
 function init() {
 
-	// console.log(bvstr);
-	// geo.computeBoundingSphere();
-
 	scene = new THREE.Scene();
-
-	// Get all the patch info (type, degree, control points, etc.)
-	var patches = read_patches_from_string(bvstr);
 
 	// initialize curvature
 	init_crv();
 
-	// all the meshes
-	patch_meshes = [];
-	control_meshes = [];
-
-	for(var i = 0; i < patches.length; i++){
-
-		// the meshes
-		var patch_mesh = new bvPatch(patches[i], {subdivisionLevel: subdivision_level});
-		/*switch(patches[i].type) {
-		  case 4:
-		  patch_mesh = new bvPatch(patches[i].pts, {subdivisionLevel: subdivision_level});
-		  }*/
-
-		patch_mesh.scale.set(0.5,0.5,0.5);	
-		scene.add( patch_mesh );
-		patch_meshes.push(patch_mesh); // add to the list
-
-		// Which mesh are we currently looking at? TODO: Need to handle multiple patches
-		current_mesh = patch_mesh;
-
-		// TODO: For multiple patches
-		/*patches.push(new THREE.Mesh(geo, patch_material));
-		  alert("Patch: " + patches[i]);
-		  patches[i].doubleSided = true;
-		  patches[i].scale.set(0.5,0.5,0.5);*/
-		//patches_mesh.push(patch_mesh);
-		//alert(patches);
-
-		// control mesh
-		var control_geometry;
-		if (patches[i].type == 1) // polyhedron
-			control_geometry = patches[i].geometry;
-		else
-			control_geometry = eval_control_mesh(patches[i].type, [patches[i].degu,patches[i].degv], patches[i].pts);
-		control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
-		control_mesh.doubleSided = true;
-		control_mesh.scale.set(0.5,0.5,0.5);
-		scene.add(control_mesh);
-		control_meshes.push(control_mesh);
-	}
-
-	// Set's the curvature's range after generating all the patches [min and max]
-	// TODO: Set range by slider interface
-	setPatchCurvatureRange([min_crv.x,min_crv.y,min_crv.z,min_crv.w],[max_crv.x,max_crv.y,max_crv.z,max_crv.w]);
-
+	// Camera
 	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 10000 );
 	camera.position.z = 6;
 	scene.add( camera );
 
-	// control_geometry = eval_control_mesh([vecs[0],vecs[0]],vecs[1]);
-	// control_geometry.dynamic = true;
-	// control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
-	// control_mesh.doubleSided = true;
-	// scene.add(control_mesh);
-
-	// Light
-
+	// Lights
 	pointLight1 = new THREE.PointLight( 0xffffff );
 	pointLight1.position.x = 360;
 	pointLight1.position.z = 360;
@@ -111,12 +61,13 @@ function init() {
 
 	scene.add( pointLight2 );
 
+	// Renderer
 	renderer = new THREE.WebGLRenderer();
 	renderer.sortObjects = false;
-	//renderer = new THREE.CanvasRenderer();
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.setFaceCulling(false) ;
 
+	// Controls
 	controls = new THREE.TrackballControls( camera, renderer.domElement );
 	controls.rotateSpeed = 1.0;
 	controls.zoomSpeed = 1.2;
@@ -132,6 +83,10 @@ function init() {
 	controls.minDistance = radius * 1.1;
 	controls.maxDistance = radius * 100;
 
+	// load the mesh
+	loadMesh(default_mesh);
+	
+	// add to the page
 	document.body.appendChild( renderer.domElement );
 
 
@@ -150,19 +105,84 @@ function animate() {
 /** the main render function **/
 function render() {
 	renderer.render( scene, camera );
+}
 
+/** Changes mesh **/
+function setMesh(file) {
+	// first remove all the current ones
+	removeAllMeshes();
+	
+	// load new one
+	loadMesh(file);
+}
+
+/** Removes all the meshes from the scene **/
+function removeAllMeshes() {
+	for (var i = 0; i < patch_meshes.length; i++) {
+		scene.remove(patch_meshes[i]);
+		scene.remove(control_meshes[i]);
+	}
+}
+
+/** Loads the patches from a file **/
+function loadMesh(file) {
+	$.get(file, function(data) {
+		var patches = read_patches_from_string(data);
+		// all the meshes
+		patch_meshes = [];
+		control_meshes = [];
+
+		for(var i = 0; i < patches.length; i++){
+
+			// the meshes
+			var patch_mesh = new bvPatch(patches[i], {subdivisionLevel: subdivision_level});
+
+			patch_mesh.scale.set(0.5,0.5,0.5);	
+			scene.add( patch_mesh );
+			patch_meshes.push(patch_mesh); // add to the list
+
+			// control mesh
+			var control_geometry;
+			if (patches[i].type == 1) // polyhedron
+				control_geometry = patches[i].geometry;
+			else
+				control_geometry = eval_control_mesh(patches[i].type, [patches[i].degu,patches[i].degv], patches[i].pts);
+			control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
+			control_mesh.doubleSided = true;
+			control_mesh.scale.set(0.5,0.5,0.5);
+			scene.add(control_mesh);
+			control_meshes.push(control_mesh);	
+			
+			// Set's the curvature's range after generating all the patches [min and max]
+			// TODO: Set range by slider interface
+			setPatchCurvatureRange([min_crv.x,min_crv.y,min_crv.z,min_crv.w],[max_crv.x,max_crv.y,max_crv.z,max_crv.w]);
+			
+			// proper viewing of patches and control mesh
+			toggle_patches();
+			toggle_controlMeshes();
+			
+			// render mode
+			setRenderMode(render_mode);
+		}
+	})
+	.error(function() {
+		alert('Error reading ' + file);
+	});
 }
 
 // Sets the render mode of the patches
 function setRenderMode(mode) {
 	// update for each mesh
+	render_mode = mode;
 	for (var i = 0; i < patch_meshes.length; i++)
 		patch_meshes[i].setRenderMode(mode);
 }
 
 // toggle viewing control meshes
-function toggle_controlMesh() {
-	show_controlMesh = !show_controlMesh;
+function toggle_controlMeshes(toggle) {
+	toggle !== 'undefined' ? toggle : false;
+	if (toggle)
+		show_controlMesh = !show_controlMesh;
 	for (var i = 0; i < control_meshes.length; i++) 
 		if (show_controlMesh)
 			control_meshes[i].visible = true;
@@ -171,8 +191,10 @@ function toggle_controlMesh() {
 }
 
 // toggle viewing patches
-function toggle_patches() {
-	show_patch = !show_patch;
+function toggle_patches(toggle) {
+	toggle !== 'undefined' ? toggle : false;
+	if (toggle)
+		show_patch = !show_patch;
 	for (var i = 0; i < patch_meshes.length; i++) 
 		if (show_patch)
 			patch_meshes[i].visible = true;
@@ -186,53 +208,3 @@ function setPatchCurvatureRange(minc,maxc){
 		patch_meshes[i].setCurvatureRange(minc,maxc);
 	}    
 }
-
-
-// OLD CODE:
-/** keypresses **/
-/*$(document).keypress(function(evt) {
-// get the character
-var ch = String.fromCharCode(evt.keyCode);
-switch(ch) {
-case 'm': // control mesh
-toggle_controlMesh();
-break;
-case 'p': // patches
-toggle_patches();
-break;
-case 'c': // curvature
-change_color();//toggle_curvature();
-//toggle_patches();
-break;
-default:
-break;
-// TODO: Add for curvature, patches, etc.
-}
-}
-);
-
-function toggle_curvature() {
-show_curvature = !show_curvature;
-//patch_mesh.visible = false;
-//curvature_mesh.visible = true;
-current_mesh.visible = false;
-if (show_curvature) {
-current_mesh = curvature_mesh;
-}
-else
-current_mesh = patch_mesh;
-
-// is it visible?
-if (show_patch)
-current_mesh.visible = true;//scene.add(patch_mesh);	
-}
-
-function toggle_highlight() {
-if(current_mesh.getRenderMode() == bvQuadPatch.HighlightLine){
-current_mesh.setRenderMode(bvQuadPatch.ReflectionLine);
-}
-else
-current_mesh.setRenderMode(bvQuadPatch.HighlightLine);
-}*/
-
-

@@ -32,12 +32,34 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
     
 	<!-- UI -->
+	
+	<!-- Meshes -->
+	
+	<form>
+	  <div align="left"><br/>
+		Choose mesh: <br />
+	    <input type="radio" name="mesh" value="polyhedron"
+		   onclick="setMesh(polyhedron);"
+		   checked = "checked"> Cube (Polyhedron)
+	    <input type="radio" name="mesh" value="bicubic"
+		   onclick="setMesh(bicubic);"
+		   > Bi-cubic Bezier 
+	    <input type="radio" name="mesh" value="triangular"
+		   onclick="setMesh(triangular);"
+		   > Triangular Cubic
+	    <input type="radio" name="mesh" value="rational"
+		   onclick="setMesh(rational);"
+		   > Rational Bicubic
+		<br /> <br />
+	  </div>
+	</form>
+	
 	Show Control Mesh:
-	<input type = "checkbox" checked="checked" id="cb_controlMesh" onClick="toggle_controlMesh();"/>
+	<input type = "checkbox" checked="checked" id="cb_controlMesh" onClick="toggle_controlMeshes(true);"/>
 	
 	<br />
 	Show Patches:
-	<input type = "checkbox" checked="checked" id="cb_patches" onClick="toggle_patches();"/>
+	<input type = "checkbox" checked="checked" id="cb_patches" onClick="toggle_patches(true);"/>
 	
 	<br />
 	<form>
