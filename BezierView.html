@@ -20,24 +20,79 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <style>
       body {
-      font-family: Monospace;
-      background-color: #f0f0f0;
-      margin: 0px;
-      overflow: hidden;
+      	font-family: Monospace;
+      	background-color: #f0f0f0;
+      	margin: 0px;
+      	overflow: hidden;
       }
+	  
+	  #inputFile {display: none;}
+	  
     </style>
   </head>
   <body>
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-    
+    <script>
+		<!-- function for showing/hiding the input mesh text -->
+		function toggleCustom(vis) {
+			var div = document.getElementById("inputFile");
+			if (vis)
+				div.style.display = 'block';
+			else
+				div.style.display = 'none';
+		}
+		
+		<!-- User input mesh -->
+		function setCustomMesh() {
+			removeAllMeshes();
+		
+			var inputText = document.getElementById("customMesh").value;
+			loadMesh(inputText);
+		}
+	</script>
+	
 	<!-- UI -->
+	
+	<!-- Meshes -->
+	
+	<form>
+	  <div align="left"><br/>
+		Choose mesh: <br />
+	    <input type="radio" name="mesh" value="polyhedron"
+		   onclick="toggleCustom(false);setMesh(polyhedron);"
+		   checked = "checked"> Cube (Polyhedron)
+	    <input type="radio" name="mesh" value="bicubic"
+		   onclick="toggleCustom(false);setMesh(bicubic);"
+		   > Bi-cubic Bezier 
+	    <input type="radio" name="mesh" value="triangular"
+		   onclick="toggleCustom(false);setMesh(triangular);"
+		   > Triangular Cubic
+	    <input type="radio" name="mesh" value="rational"
+		   onclick="toggleCustom(false);setMesh(rational);"
+		   > Rational Bicubic
+		<input type="radio" name="mesh" value="custom"
+		   onclick="toggleCustom(true);"
+		   > Custom input mesh
+		<br /> <br />
+	  </div>
+	</form>
+	
+	<!-- Custom mesh input -->
+	<div id="inputFile">
+		<!-- <form method="post" action=""> -->
+			<textarea id="customMesh" name="custom" cols="40" rows="15">
+		
+			</textarea><br>
+			<input type="button" value="Submit" onclick="setCustomMesh();"/>
+	</div>
+	
 	Show Control Mesh:
-	<input type = "checkbox" checked="checked" id="cb_controlMesh" onClick="toggle_controlMesh();"/>
+	<input type = "checkbox" checked="checked" id="cb_controlMesh" onClick="toggle_controlMeshes(true);"/>
 	
 	<br />
 	Show Patches:
-	<input type = "checkbox" checked="checked" id="cb_patches" onClick="toggle_patches();"/>
+	<input type = "checkbox" checked="checked" id="cb_patches" onClick="toggle_patches(true);"/>
 	
 	<br />
 	<form>

@@ -209,7 +209,7 @@ function eval_triangular(patch, subDepth) {
                        w* DeCastel[b2i(0,0,1,deg)].z;
 
             //V00   = DeCastel[(*b2i)(0,0,0,deg)];
-			console.log(point.x + "," + point.y + "," + point.z);
+			//console.log(point.x + "," + point.y + "," + point.z);
             V00   = point;
             if (atvtx )   {
                 V01   = DeCastel[b2i(0,1,0,deg)];
@@ -303,7 +303,7 @@ function eval_triangular(patch, subDepth) {
 		//glNormal3dv(&(eval_N[loc*DIM]));
 		//glVertex4dv(&(eval_P[loc*DIM]));
 		vertex_indices.push(loc);
-		console.log("Indices size: " + vertex_indices.length);
+		//console.log("Indices size: " + vertex_indices.length);
 		
 		// add the faces (triangles)
 		for (var k = 0; k < vertex_indices.length - 2; k += 1)  {
