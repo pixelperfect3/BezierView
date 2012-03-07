@@ -56,7 +56,7 @@ function read_polyhedron(parser) {
 	// Construct the geometry directly
 	var geo = new THREE.Geometry();
 
-	console.log("NumFaces: " + numFaces + ",verts: " + numVertices);
+	//console.log("NumFaces: " + numFaces + ",verts: " + numVertices);
 
 	// all the vertices
 	for(var i = 0; i < numVertices; i++)
@@ -96,24 +96,15 @@ function read_triangular(parser) {
 	var deg;
 
 	deg = parser.nextInt();
-	console.log("Degree: " + deg);
+	//console.log("Degree: " + deg);
 	
 	// read all the control points
 	var vecs = [];
-	for(var i = 0; i < 10; i++){ //((deg+2) * (deg+1)/2)
-		
-		//var v = read_vec3(parser);
-		/*var x = parser.nextFloat();
-		var y = parser.nextFloat();
-		var z = parser.nextFloat();
-		console.log("X = " + x  + ", Y = " + y + ", Z = " + z);
-		v.set(x, y, z, 1.0);*/
-		//console.log(v);
-		//vecs[i] = read_vec3(parser);
+	for(var i = 0; i < ((deg+2) * (deg+1)/2); i++) {
 		vecs.push(read_vec3(parser));	
 	}
 
-	console.log(vecs);
+	//console.log(vecs);
 	
 	return {"type":3,"deg":deg,"pts":vecs};
 }
@@ -161,7 +152,7 @@ bvFileParser = function(str){
 		// append all the segments
 		this.stream = this.stream.concat(segs);
 	}
-	console.log(this.stream);
+	//console.log(this.stream);
 	this.currentPos = 0;
 }
 
@@ -194,7 +185,7 @@ function read_vec3(parser){
 	x = parser.nextFloat();
 	y = parser.nextFloat();
 	z = parser.nextFloat();
-	console.log("X = " + x  + ", Y = " + y + ", Z = " + z);
+	//console.log("X = " + x  + ", Y = " + y + ", Z = " + z);
 	return new THREE.Vector4(x,y,z,1.0);
 }
 
