@@ -23,6 +23,32 @@
   <body>
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js" type="text/javascript"></script>
+	<!-- The Three.js library for rendering -->
+	<script src="js/Three.js"></script>
+
+	<!-- The library for curvature rendering -->
+	<script src="js/crv.js"></script>
+
+	<!-- The library for highlight/reflectline -->
+	<script src="js/highlight.js"></script>
+
+	<!-- The library for bvPatch -->
+	<script src="js/bvPatch.js"></script>
+
+	<!-- Evaluating patches -->
+	<script src="js/eval.js"></script>	
+	
+	<!-- The library for reading patches -->
+	<script src="js/read.js"></script>
+	
+	
+	
+	<!-- The main renderer and starting point -->
+	<script src="js/render.js"></script>
+
+	<!-- For reading the query string -->
+	<script src="js/querystring.js"></script>
+
     <script>
 		<!-- function for showing/hiding the input mesh text -->
 		function toggleCustom(vis) {
@@ -51,7 +77,13 @@
 				}, function(){
 				});
 			}
-			$(document).click(function() { $(".content").slideUp("fast"); });
+			model = queryString("model");
+			init(model?model:default_mesh);
+			animate();
+		});
+		$(document).click(function(ev) { 
+			$(".content").slideUp("fast"); 
+			ev.which == 3 && $("#ui").slideToggle("medium");
 		});
 	</script>
 	
@@ -59,6 +91,7 @@
 	
 	<div id="ui">
 	<!-- Meshes -->
+	<div id="uibg">&nbsp;</div>
 	<div class="menubar"> 
 		<div class="apptitle">BezierView WebGL</div>
 		<div class="menu" >
@@ -140,29 +173,6 @@
 			</div>
 		</div>
 	</div>
-
-	<!-- The Three.js library for rendering -->
-	<script src="js/Three.js"></script>
-
-	<!-- The library for curvature rendering -->
-	<script src="js/crv.js"></script>
-
-	<!-- The library for highlight/reflectline -->
-	<script src="js/highlight.js"></script>
-
-	<!-- The library for bvPatch -->
-	<script src="js/bvPatch.js"></script>
-
-	<!-- Evaluating patches -->
-	<script src="js/eval.js"></script>	
-	
-	<!-- The library for reading patches -->
-	<script src="js/read.js"></script>
-	
-	
-	
-	<!-- The main renderer and starting point -->
-	<script src="js/render.js"></script>
 
 	
 	
