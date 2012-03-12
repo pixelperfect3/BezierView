@@ -1,0 +1,35 @@
+body {
+	font-family: "Trebuchet MS", "Verdana",  sans-serif;
+	margin: 0px;
+	overflow: hidden;
+  }
+
+  #ui {
+	  position: absolute;
+	  background-color: #f0f0f0;
+	  width: 100%;
+  }
+
+  div.menubar >div {
+	  margin: 0em 1em;
+	  float: left;
+  }
+
+  div.apptitle {
+	  font-weight: bold;
+	  font-size: larger;
+	  padding: 0.3em;
+  }
+  div.menu { }
+  div.menu .title { cursor: pointer; padding: 0.4em; }
+  div.menu .content {
+	  position: absolute;
+	  margin: 0px; padding: 0px;
+	  list-style:none; 
+	  background-color: #eee;
+	  display:none;
+  }
+  div.menu ul li:hover { background: #bbf; }
+  div.menu ul li input {}
+
+
