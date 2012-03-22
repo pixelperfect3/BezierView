@@ -1,12 +1,21 @@
 body {
 	font-family: "Trebuchet MS", "Verdana",  sans-serif;
 	margin: 0px;
-	overflow: hidden;
+	position:absolute;
+	top:0px;
+	bottom:0px;
+	left:0px;
+	top:0px;
+	right:0px;
+	padding: 0px;
+	margin: 0px;
+/*	border: 1px solid blue;*/
 }
 
 #ui {
 	position: absolute;
 	width: 100%;
+	z-index: 1;
 }
 #uibg {
 	position: absolute;
@@ -19,7 +28,7 @@ body {
 }
 
 div.menubar >div {
-  margin: 0em 1em;
+  margin: 0em .2em;
   float: left;
 }
 
@@ -30,6 +39,7 @@ div.apptitle {
 }
 div.menu { }
 div.menu .title { cursor: pointer; padding: 0.4em; }
+div.menu .title:hover { background: #bbf; }
 div.menu .content {
   position: absolute;
   margin: 0px; padding: 0px;
@@ -37,7 +47,13 @@ div.menu .content {
   background-color: #eee;
   display:none;
 }
+div.menu a { text-decoration:none; }
 div.menu ul li:hover { background: #bbf; }
-div.menu ul li input {}
+div.menu ul li { padding: .1em; }
 
 
+div.dialog {
+	display:none;
+}
+div.dialog .title { display:none }
+#viewer {  position: absolute; overflow: hidden; top: 0px; left:0px; right: 0px; bottom: 0px;}

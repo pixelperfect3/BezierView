@@ -77,9 +77,7 @@ function init(default_mesh) {
 	// load the mesh
 	loadMeshFromFile(default_mesh);
 	
-	// add to the page
-	document.body.appendChild( renderer.domElement );
-
+	return renderer.domElement;
 
 }
 
