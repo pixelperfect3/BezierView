@@ -25,18 +25,9 @@ var triangular 	= "data/tri1.bv";
 /** render mode **/
 var render_mode = bvPatch.normal;
 
-/* get the data */
-$.get(default_mesh, function(data) {
-		bvstr = data;
-		init();
-		animate();
-	})
-	.error(function() {
-		alert('Error reading ' + test_url);
-	});
 
 /** The initialization function **/
-function init() {
+function init(default_mesh) {
 
 	scene = new THREE.Scene();
 
@@ -86,9 +77,7 @@ function init() {
 	// load the mesh
 	loadMeshFromFile(default_mesh);
 	
-	// add to the page
-	document.body.appendChild( renderer.domElement );
-
+	return renderer.domElement;
 
 }
 
