@@ -1,0 +1,59 @@
+body {
+	font-family: "Trebuchet MS", "Verdana",  sans-serif;
+	margin: 0px;
+	position:absolute;
+	top:0px;
+	bottom:0px;
+	left:0px;
+	top:0px;
+	right:0px;
+	padding: 0px;
+	margin: 0px;
+/*	border: 1px solid blue;*/
+}
+
+#ui {
+	position: absolute;
+	width: 100%;
+	z-index: 1;
+}
+#uibg {
+	position: absolute;
+	background-color: #eee;
+	width: 100%;
+	top: 0px;
+	bottom: 0px;
+	opacity: .7;
+	z-index: -1;
+}
+
+div.menubar >div {
+  margin: 0em .2em;
+  float: left;
+}
+
+div.apptitle {
+  font-weight: bold;
+  font-size: larger;
+  padding: 0.3em;
+}
+div.menu { }
+div.menu .title { cursor: pointer; padding: 0.4em; }
+div.menu .title:hover { background: #bbf; }
+div.menu .content {
+  position: absolute;
+  margin: 0px; padding: 0px;
+  list-style:none; 
+  background-color: #eee;
+  display:none;
+}
+div.menu a { text-decoration:none; }
+div.menu ul li:hover { background: #bbf; }
+div.menu ul li { padding: .1em; }
+
+
+div.dialog {
+	display:none;
+}
+div.dialog .title { display:none }
+#viewer {  position: absolute; overflow: hidden; top: 0px; left:0px; right: 0px; bottom: 0px;}

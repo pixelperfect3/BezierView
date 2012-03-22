@@ -1,0 +1,215 @@
+<!-- The main file which will act as the interface to BezierView 
+
+     Author(s):
+     Ruijin Wu
+     Shayan Javed [shayanj at gmail.com]
+-->
+
+<!-- TODO:
+     -User Interface for modifying parameters
+     -Rendering surfaces and surface properties (curvature, reflection lines, normals, etc.)
+     -Reading in multiple types 
+
+     -->
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>BezierView</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<link rel="stylesheet" href="css/main.css" />
+
+	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/themes/base/jquery-ui.css">
+  </head>
+  <body>
+
+	  <script src="js/jquery-1.7.1.js" type="text/javascript"></script>
+	  <script type="text/javascript" src="js/jquery-ui-1.8.18.min.js"></script>
+
+	<!-- The Three.js library for rendering -->
+	<script src="js/Three.js"></script>
+
+	<!-- The library for curvature rendering -->
+	<script src="js/crv.js"></script>
+
+	<!-- The library for highlight/reflectline -->
+	<script src="js/highlight.js"></script>
+
+	<!-- The library for bvPatch -->
+	<script src="js/bvPatch.js"></script>
+
+	<!-- Evaluating patches -->
+	<script src="js/eval.js"></script>	
+	
+	<!-- The library for reading patches -->
+	<script src="js/read.js"></script>
+	
+	
+	<!-- The main renderer and starting point -->
+	<script src="js/render.js"></script>
+
+	<!-- For reading the query string -->
+	<script src="js/querystring.js"></script>
+
+    <script>
+		<!-- User input mesh -->
+		function setCustomMesh() {
+			removeAllMeshes();
+		
+			var inputText = document.getElementById("customMesh").value;
+			loadMesh(inputText);
+		}
+
+		dialogs = new Object();
+		var lastmenu = null;
+
+
+		$(document).ready(function(){
+			for( m in $('div.menu')) { 
+				$(".title", m).click(function(){
+					if(lastmenu!=null)
+						$(lastmenu).hide();
+					lastmenu = 
+					$("+ .content",this).slideDown("fast");
+					return false;
+				});
+			}
+			model = queryString("model");
+			var viewer = init(default_mesh);
+			$('#glviewer').replaceWith(viewer);
+			animate();
+
+			$('div.dialog').each(function(index){
+				var t = $(".title", this);
+				dialogs[$(this).attr('ID')]=
+				$(this).dialog({ autoOpen:false, title: t });
+				return true;
+			});
+			dialogs['custominput']=createCustomInputDialog();
+
+			dialogs['welcome'].dialog('open');
+
+		});
+		
+		$(document).click(function(ev) { 
+			$(".content").slideUp("fast"); 
+		});
+
+		function createCustomInputDialog(){
+			return $("#custominput").dialog({
+				 autoOpen: false, width: 400, height: 330,
+				 title: $("#custominput .title"),
+				 buttons: {
+					 "Update": function () {
+						 setCustomMesh();
+					 }
+				 }
+			 });
+		}
+
+		function gallery_select(filename){
+			removeAllMeshes();
+			loadMeshFromFile(filename);
+		}
+		function closedialog(name){
+			dialogs[name].dialog('close');
+		}
+		function showdialog(name){
+			dialogs[name].dialog('open');
+		}
+	</script>
+	
+	<!-- UI -->
+	
+	<div id="ui">
+	<!-- Meshes -->
+	<div id="uibg">&nbsp;</div>
+	<div class="menubar"> 
+		<div class="apptitle">BezierView WebGL</div>
+		<div class="menu" >
+			<div class="title" >Mesh</div>
+			<ul class="content" style="width:10em" >
+				<li>
+					<a href="javascript:" onclick="showdialog('gallery')">Mesh Gallery</a>
+				</li><li>
+					<a href="javascript:" onclick="showdialog('custominput')">BV Text Input</a>
+				</li><li>
+				</li>
+			</ul>
+		</div>
+		<div class="menu" >
+			<div class="title" >Show</div>
+			<ul class="content"  style="width:10em" >
+				<li>
+				<input type = "checkbox" checked="checked" id="cb_controlMesh" onClick="toggle_controlMeshes(true);"/>
+				<label for="cb_controlMesh" >Control Mesh</label>
+				</li>
+
+				<li>
+				<input type = "checkbox" checked="checked" id="cb_patches" onClick="toggle_patches(true);"/>
+				<label for="cb_patches">Patches</label>
+				</li>
+			</ul>
+		</div>
+	
+	
+		<div class="menu" >
+			<div class="title" >View</div>
+			<ul class="content" style="width:20em" >
+				<li>
+				<input type="radio" name="renderMode" value="normal" id="normal"
+				   onclick="setRenderMode(bvPatch.Normal);"
+				   checked = "checked"><label for="normal" >Regular</label>
+				</li><li>
+				<input type="radio" name="renderMode" value="crv" id="crv"
+				   onclick="setRenderMode(bvPatch.CurvatureColor);">
+				<label for="crv" >Curvature </label>
+				</li><li>
+				<input type="radio" name="renderMode" value="highlight" id="highlight"
+				   onclick="setRenderMode(bvPatch.HighlightLine);"
+				   >
+				<label for="highlight" >Highlight Lines </label>
+				</li><li>
+				<input type="radio" name="renderMode" value="reflect" id="reflect"
+				   onclick="setRenderMode(bvPatch.ReflectionLine);">
+				<label for="reflect" >Reflection Lines </label>
+				</li>
+			</ul>
+		</div>
+
+	</div>
+	</div>
+
+	<div id="gallery" class="dialog" >
+		<span class="title">Mesh Gallery</span>
+		<ul>
+			<li><a href="javascript:" onclick="gallery_select('data/cube.bv')">Cube(Polyhedron)</a></li>
+			<li><a href="javascript:" onclick="gallery_select('data/dtorus.bv')">Double torus</a></li>
+			<li><a href="javascript:" onclick="gallery_select('data/hand.bv')">Rational</a></li>
+			<li><a href="javascript:" onclick="gallery_select('data/hex2.bv')">Hex2</a></li>
+		</ul>
+	</div>
+
+	<div id="welcome" class="dialog"  >
+		<span class="title">Welcome to BezierView</span>
+		<ul>
+			<li><a href="javascript:" onclick="showdialog('gallery')">
+				Select a mesh from our gallery</a></li>
+			<li><a href="javascript:" onclick="showdialog('custominput')">
+				Enter the text of your .BV file</a></li>
+		</ul>
+	</div>
+	
+	<!-- Custom mesh input -->
+	<div id="custominput"  style="padding:0px;display:none" >
+		<div class="title" >Text Input</div>
+		<textarea id="customMesh" name="custom" style="width:97%;height:95%" rows="15">
+
+		</textarea>
+	</div>
+	
+	<!-- DOM element to hold the WebGL renderer element -->
+	<div id="viewer" ><div id="glviewer"></div></div>
+  </body>
+</html>
