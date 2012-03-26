@@ -131,8 +131,10 @@ function loadMesh(data) {
 
 		// control mesh
 		var control_geometry;
-		if (patches[i].type == 1) // polyhedron
+		if (patches[i].type == 1) 		// polyhedron
 			control_geometry = patches[i].geometry;
+		else if (patches[i].type == 3) 	// triangular bezier
+			control_geometry = eval_control_mesh(patches[i].type, patches[i].deg, patches[i].pts);
 		else
 			control_geometry = eval_control_mesh(patches[i].type, [patches[i].degu,patches[i].degv], patches[i].pts);
 		control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
