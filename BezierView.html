@@ -65,8 +65,27 @@
 		dialogs = new Object();
 		var lastmenu = null;
 
-
 		$(document).ready(function(){
+			// webgl check first
+			var contextNames = ["webgl","experimental-webgl","moz-webgl","webkit-3d"];
+			var canvas = document.createElement('canvas');
+			for(var i = 0; i < contextNames.length; i++){
+				try{
+					gl = canvas.getContext(contextNames[i]);
+					if(gl){
+						break;
+					}
+				}catch(e){
+					continue;//noWebGL("Unfortunately, there's a WebGL compatibility problem. </br> You may want to check your system settings.");
+					//return;
+				}
+			}
+            if(gl === undefined) {
+                alert("WebGL has not been detected on your system.  Please check your settings.");
+                return;
+            }
+		
+			// Menu and Gui setup
 			for( m in $('div.menu')) { 
 				$(".title", m).click(function(){
 					if(lastmenu!=null)
