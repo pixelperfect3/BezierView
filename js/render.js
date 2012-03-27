@@ -206,3 +206,14 @@ function setPatchCurvatureRange(minc,maxc){
 		patch_meshes[i].setCurvatureRange(minc,maxc);
 	}    
 }
+
+// Sets the size of the renderer 
+function setRendererSize() {
+	if (renderer) {
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		
+		// update the projection matrix of the camera too
+		camera.aspect = window.innerWidth/window.innerHeight;
+		camera.updateProjectionMatrix();
+	}
+}
