@@ -54,6 +54,12 @@
 	<script src="js/querystring.js"></script>
 
     <script>
+		<!-- On window resize, resize the renderer -->
+		$(window).resize(function() {
+				setRendererSize();
+			}
+		);
+	
 		<!-- User input mesh -->
 		function setCustomMesh() {
 			removeAllMeshes();
@@ -65,6 +71,8 @@
 		dialogs = new Object();
 		var lastmenu = null;
 
+		
+		// On startup
 		$(document).ready(function(){
 			// webgl check first
 			var contextNames = ["webgl","experimental-webgl","moz-webgl","webkit-3d"];
@@ -212,6 +220,7 @@
 		</ul>
 	</div>
 
+	<!-- Initial dialog -->
 	<div id="welcome" class="dialog"  >
 		<span class="title">Welcome to BezierView</span>
 		<ul>
@@ -219,6 +228,7 @@
 				Select a mesh from our gallery</a></li>
 			<li><a href="javascript:" onclick="showdialog('custominput'); closedialog('welcome');">
 				Enter the text of your .BV file</a></li>
+			
 		</ul>
 	</div>
 	
