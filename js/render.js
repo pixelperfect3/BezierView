@@ -3,6 +3,8 @@ var camera, scene, renderer,
     geometry, material, regular_material, curvature_material, controls, pointLight;
 
 // the meshes
+patch_meshes = [];
+control_meshes = [];
 var patch_mesh, curvature_mesh, current_mesh;
 
 /* User-dependent variables */
@@ -75,7 +77,7 @@ function init(default_mesh) {
 	controls.maxDistance = radius * 100;
 
 	// load the mesh
-	loadMeshFromFile(default_mesh);
+	//loadMeshFromFile(default_mesh);
 	
 	return renderer.domElement;
 
