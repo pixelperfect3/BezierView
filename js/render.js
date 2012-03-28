@@ -127,7 +127,7 @@ function loadMesh(data) {
 		// the meshes
 		var patch_mesh = new bvPatch(patches[i], {subdivisionLevel: subdivision_level});
 
-		patch_mesh.scale.set(0.5,0.5,0.5);	
+		//patch_mesh.scale.set(0.5,0.5,0.5);	
 		scene.add( patch_mesh );
 		patch_meshes.push(patch_mesh); // add to the list
 
@@ -141,7 +141,7 @@ function loadMesh(data) {
 			control_geometry = eval_control_mesh(patches[i].type, [patches[i].degu,patches[i].degv], patches[i].pts);
 		control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
 		control_mesh.doubleSided = true;
-		control_mesh.scale.set(0.5,0.5,0.5);
+		//control_mesh.scale.set(0.5,0.5,0.5);
 		scene.add(control_mesh);
 		control_meshes.push(control_mesh);	
 			
@@ -156,6 +156,55 @@ function loadMesh(data) {
 		// render mode
 		setRenderMode(render_mode);
 	}
+
+	// compute the bounding box for the whole patch
+	var min = new THREE.Vector3();
+	var max = new THREE.Vector3();
+
+	if(patch_meshes.length >= 1){
+		min.copy(patch_meshes[0].geometry.boundingBox.min);
+		max.copy(patch_meshes[0].geometry.boundingBox.max);
+
+		for(var i = 1; i < patch_meshes.length; i++){
+			var box = patch_meshes[i].geometry.boundingBox;
+			console.log(box)
+
+			if(box.min.x < min.x)
+				min.x = box.min.x
+
+			if(box.min.y < min.y)
+				min.y = box.min.y
+
+			if(box.min.z < min.z)
+				min.z = box.min.z
+
+			if(box.max.x > max.x)
+				max.x = box.max.x
+
+			if(box.max.y > max.y)
+				max.y = box.max.y
+
+			if(box.max.z > max.z)
+				max.z = box.max.z
+		}
+	}
+
+	// calculate the scale ratio from the bounding box
+	var boxsize = max.subSelf(min);
+	console.log(boxsize);
+	var diameter = Math.max(boxsize.x,boxsize.y,boxsize.z);
+
+	// TODO: hardcode here, should scale accroding to the camera
+	var scale_ratio = 4.0/diameter;
+
+	// scale both the patch and control mesh
+
+	for(var i = 0; i < patch_meshes.length; i++){
+		patch_meshes[i].scale.set(scale_ratio,scale_ratio,scale_ratio);
+		control_meshes[i].scale.set(scale_ratio,scale_ratio,scale_ratio);
+	}
+	
+	
 }
 
 /** Loads the patches from a file **/
