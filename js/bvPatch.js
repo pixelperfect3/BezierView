@@ -20,7 +20,7 @@ bvPatch = function(patch,parameters){
 
 	// generate geometry
 	var patch_geo = eval_patch(patch, this.subdivisionLevel);
-
+	patch_geo.computeBoundingBox();
 	patch_geo.dynamic = true;
 
 	// generate material
@@ -36,6 +36,7 @@ bvPatch = function(patch,parameters){
 		attributes:     attributes,
 		vertexShader:   bvshader.vertexShader, // document.getElementById( 'vertexshader' ).textContent,
 		fragmentShader: bvshader.fragmentShader, // document.getElementById( 'fragmentshader' ).textContent,
+                perPixel: true,
 		lights:true
 		// vertexColors :THREE.VertexColors	
 	});
@@ -143,8 +144,8 @@ bvshader = {
 
 		{
 			"ambient"  : { type: "c", value: new THREE.Color( 0xFF0505 ) },
-			"specular" : { type: "c", value: new THREE.Color( 0xFF1111 ) },
-			"shininess": { type: "f", value: 30 },
+			"specular" : { type: "c", value: new THREE.Color( 0xFFFFFF ) },
+			"shininess": { type: "f", value: 64 },
 			"wrapRGB"  : { type: "v3", value: new THREE.Vector3( 1, 1, 1 ) },
 			"renderMode": {type: "i" ,value: 2},
 			"highlightLineColor": {type: 'c', value: new THREE.Color(0x000000) },
@@ -163,6 +164,7 @@ bvshader = {
 	] ),
 
 	vertexShader: [
+                "#define  PHONG_PER_PIXEL",
 		"varying vec3 vViewPosition;",
 		"varying vec3 vNormal;",
 		"varying vec3 vFixedNormal;",
@@ -277,6 +279,7 @@ bvshader = {
 
 	fragmentShader: [
 
+                "#define  PHONG_PER_PIXEL;",
 		"uniform vec3 diffuse;",
 		"uniform float opacity;",
 
