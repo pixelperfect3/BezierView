@@ -137,8 +137,9 @@
 		}
 
 		function gallery_select(filename){
-			removeAllMeshes();
-			loadMeshFromFile(filename);
+			setMesh(filename);
+			//removeAllMeshes();
+			//loadMeshFromFile(filename);
 		}
 		function closedialog(name){
 			dialogs[name].dialog('close');
