@@ -147,7 +147,7 @@ bvFileParser = function(str){
 		var line = trim(this.lines[i]);
 		if(line.length == 0)
 			continue;
-		var segs = trim(line).split(/\ +/);
+		var segs = trim(line).split(/\s+/);
 
 		// append all the segments
 		this.stream = this.stream.concat(segs);
