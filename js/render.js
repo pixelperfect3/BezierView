@@ -33,9 +33,6 @@ function init(default_mesh) {
 
 	scene = new THREE.Scene();
 
-	// initialize curvature
-	init_crv();
-
 	// Camera
 	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 10000 );
 	camera.position.z = 6;
@@ -122,12 +119,15 @@ function loadMesh(data) {
 	patch_meshes = [];
 	control_meshes = [];
 
+	// initialize curvature
+	init_crv();
+
 	for(var i = 0; i < patches.length; i++){
 
 		// the meshes
 		var patch_mesh = new bvPatch(patches[i], {subdivisionLevel: subdivision_level});
 
-		//patch_mesh.scale.set(0.5,0.5,0.5);	
+		//patch_mesh.scale.set(0.5,0.5,0.5);
 		scene.add( patch_mesh );
 		patch_meshes.push(patch_mesh); // add to the list
 
@@ -143,11 +143,7 @@ function loadMesh(data) {
 		control_mesh.doubleSided = true;
 		//control_mesh.scale.set(0.5,0.5,0.5);
 		scene.add(control_mesh);
-		control_meshes.push(control_mesh);	
-			
-		// Set's the curvature's range after generating all the patches [min and max]
-		// TODO: Set range by slider interface
-		setPatchCurvatureRange([min_crv.x,min_crv.y,min_crv.z,min_crv.w],[max_crv.x,max_crv.y,max_crv.z,max_crv.w]);
+		control_meshes.push(control_mesh);				
 			
 		// proper viewing of patches and control mesh
 		toggle_patches();
@@ -156,6 +152,11 @@ function loadMesh(data) {
 		// render mode
 		setRenderMode(render_mode);
 	}
+
+	// Set's the curvature's range after generating all the patches [min and max]
+	// TODO: Set range by slider interface
+	setPatchCurvatureRange([min_crv.x,min_crv.y,min_crv.z,min_crv.w],[max_crv.x,max_crv.y,max_crv.z,max_crv.w]);
+
 
 	// compute the bounding box for the whole patch
 	var min = new THREE.Vector3();
@@ -167,7 +168,6 @@ function loadMesh(data) {
 
 		for(var i = 1; i < patch_meshes.length; i++){
 			var box = patch_meshes[i].geometry.boundingBox;
-			console.log(box)
 
 			if(box.min.x < min.x)
 				min.x = box.min.x
@@ -191,7 +191,6 @@ function loadMesh(data) {
 
 	// calculate the scale ratio from the bounding box
 	var boxsize = max.subSelf(min);
-	console.log(boxsize);
 	var diameter = Math.max(boxsize.x,boxsize.y,boxsize.z);
 
 	// TODO: hardcode here, should scale accroding to the camera
