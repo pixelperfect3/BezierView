@@ -7,6 +7,9 @@ patch_meshes = [];
 control_meshes = [];
 var patch_mesh, curvature_mesh, current_mesh;
 
+var patch_object, control_object;
+var root_object; // TODO: Should have a better name?
+
 /* User-dependent variables */
 var show_curvature, show_controlMesh, show_patch;
 show_controlMesh = true;
@@ -57,22 +60,6 @@ function init(default_mesh) {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.setFaceCulling(false) ;
 
-	// Controls
-	controls = new THREE.TrackballControls( camera, renderer.domElement );
-	controls.rotateSpeed = 1.0;
-	controls.zoomSpeed = 1.2;
-	controls.panSpeed = 0.2;
-
-	controls.noZoom = false;
-	controls.noPan = false;
-
-	controls.staticMoving = false;
-	controls.dynamicDampingFactor = 0.3;
-
-	var radius = 2;
-	controls.minDistance = radius * 1.1;
-	controls.maxDistance = radius * 100;
-
 	// load the mesh
 	//loadMeshFromFile(default_mesh);
 	
@@ -84,7 +71,8 @@ function init(default_mesh) {
 function animate() {
 
 	// note: three.js includes requestAnimationFrame shim
-	controls.update();
+	if(controls !== undefined)
+		controls.update();
 	requestAnimationFrame( animate );
 	render();
 
@@ -106,10 +94,7 @@ function setMesh(file) {
 
 /** Removes all the meshes from the scene **/
 function removeAllMeshes() {
-	for (var i = 0; i < patch_meshes.length; i++) {
-		scene.remove(patch_meshes[i]);
-		scene.remove(control_meshes[i]);
-	}
+	scene.remove(root_object);
 }
 
 /** Load Mesh from string data **/
@@ -118,6 +103,8 @@ function loadMesh(data) {
 	// all the meshes
 	patch_meshes = [];
 	control_meshes = [];
+	patch_object = new THREE.Object3D();
+	control_object = new THREE.Object3D();
 
 	// initialize curvature
 	init_crv();
@@ -127,9 +114,8 @@ function loadMesh(data) {
 		// the meshes
 		var patch_mesh = new bvPatch(patches[i], {subdivisionLevel: subdivision_level});
 
-		//patch_mesh.scale.set(0.5,0.5,0.5);
-		scene.add( patch_mesh );
 		patch_meshes.push(patch_mesh); // add to the list
+		patch_object.add(patch_mesh);
 
 		// control mesh
 		var control_geometry;
@@ -141,9 +127,8 @@ function loadMesh(data) {
 			control_geometry = eval_control_mesh(patches[i].type, [patches[i].degu,patches[i].degv], patches[i].pts);
 		control_mesh = new THREE.Mesh( control_geometry,  new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } ));
 		control_mesh.doubleSided = true;
-		//control_mesh.scale.set(0.5,0.5,0.5);
-		scene.add(control_mesh);
 		control_meshes.push(control_mesh);				
+		control_object.add(control_mesh);
 			
 		// proper viewing of patches and control mesh
 		toggle_patches();
@@ -152,6 +137,26 @@ function loadMesh(data) {
 		// render mode
 		setRenderMode(render_mode);
 	}
+
+	// add root object for easier scale and moving
+	root_object = new THREE.Object3D();
+	root_object.add(patch_object);
+	root_object.add(control_object);
+	scene.add(root_object);
+
+	// Controller for moveing the object
+	controls = new THREE.ObjectControls( root_object, camera, renderer.domElement );
+	controls.rotateSpeed = 0.2;
+	controls.zoomSpeed = 1.2;
+	controls.panSpeed = 1.0;
+
+	controls.staticMoving = false;
+	controls.dynamicDampingFactor = 0.8;
+
+	var radius = 2;
+	controls.minDistance = radius * 1.1;
+	controls.maxDistance = radius * 100;
+
 
 	// Set's the curvature's range after generating all the patches [min and max]
 	// TODO: Set range by slider interface
@@ -198,11 +203,7 @@ function loadMesh(data) {
 
 	// scale both the patch and control mesh
 
-	for(var i = 0; i < patch_meshes.length; i++){
-		patch_meshes[i].scale.set(scale_ratio,scale_ratio,scale_ratio);
-		control_meshes[i].scale.set(scale_ratio,scale_ratio,scale_ratio);
-	}
-	
+	root_object.scale.set(scale_ratio,scale_ratio,scale_ratio);
 	
 }
 
@@ -229,11 +230,10 @@ function toggle_controlMeshes(toggle) {
 	toggle !== 'undefined' ? toggle : false;
 	if (toggle)
 		show_controlMesh = !show_controlMesh;
-	for (var i = 0; i < control_meshes.length; i++) 
-		if (show_controlMesh)
-			control_meshes[i].visible = true;
-		else
-			control_meshes[i].visible = false;
+	
+	// set visible for parent object will not affect children
+	// so use showHierarchy
+	THREE.SceneUtils.showHierarchy(control_object,show_controlMesh);
 }
 
 // toggle viewing patches
@@ -241,11 +241,10 @@ function toggle_patches(toggle) {
 	toggle !== 'undefined' ? toggle : false;
 	if (toggle)
 		show_patch = !show_patch;
-	for (var i = 0; i < patch_meshes.length; i++) 
-		if (show_patch)
-			patch_meshes[i].visible = true;
-		else
-			patch_meshes[i].visible = false;
+
+	// set visible for parent object will not affect children
+	// so use showHierarchy
+	THREE.SceneUtils.showHierarchy(patch_object,show_patch);
 }
 
 // set the curvature scale range
