@@ -257,7 +257,7 @@ function eval_triangular(patch, subDepth) {
 			// compute the curvatures (Gaussian, mean, min and max)
 			// at the (u,v) parameter
 			// TODO: Curvature
-            //h = crv3 (V00, V01, V02, V10, V20, V11, deg, crv_array[loc]);
+            h = crv3 (V00, V01, V02, V10, V20, V11, deg, crv_array[loc]);
 
             //printf("value %f at %d \n", h, loc);
             loc ++;
@@ -342,6 +342,10 @@ function eval_triangular(patch, subDepth) {
 	// THREE.js calculated normals
 	//geo.computeFaceNormals();
 	//geo.computeVertexNormals();
+
+	geo.rawP = eval_P;
+	geo.rawN = eval_N;
+	geo.rawCrv = crv_array;
 	
 	return geo;
 }
