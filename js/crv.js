@@ -221,6 +221,56 @@ function krv(v00, Deriv, crv_result)
 		return krv(v00, Deriv, crv_result);
 	}
 
+/* curvature routine for three sided patch
+ * Compute the curvature from related coefficients
+
+   input: Bezier control points related to the curvature
+
+         v ^ 
+           | v02
+           | v01 v11
+           | v00 v10 v20
+            ----------------> u
+   output: curvature at v00
+*/
+function crv3( v00, v10, v20, v01, v02, v11,deg, 
+			   crv_result)
+{
+    var        Deriv = new Array(3);
+    var         m;
+    var         d1 = deg-1;
+	
+	for(var i = 0; i < 3; i++){
+		Deriv[i] = new Array(3);
+		for(var j = 0; j < 3; j++){
+			Deriv[i][j] = new THREE.Vector4();
+		}
+	}
+	
+	// first compute the derivatives 
+    // Deriv[1][0][m] = deg*(v10[m]-v00[m]);
+	Deriv[1][0] = v10.clone().subSelf(v00).multiplyScalar(deg);
+    // Deriv[0][1][m] = deg*(v01[m]-v00[m]);
+	Deriv[0][1] = v01.clone().subSelf(v00).multiplyScalar(deg);
+	if(d1==0) {
+		// Deriv[0][2][m] = Deriv[2][0][m] = Deriv[1][1][m] =0;
+	}
+	else 
+	{
+		// Deriv[2][0][m] = deg*d1*(v20[m]-2*v10[m]+v00[m]);
+		// Deriv[0][2][m] = deg*d1*(v02[m]-2*v01[m]+v00[m]);
+		// Deriv[1][1][m] = deg*d1*(v11[m]-v01[m]-v10[m]+v00[m]);
+		Deriv[2][0] = v20.clone().subSelf(v10.clone().multiplyScalar(2)).addSelf(v00).multiplyScalar(deg*d1);
+		Deriv[0][2] = v02.clone().subSelf(v01.clone().multiplyScalar(2)).addSelf(v00).multiplyScalar(deg*d1);
+		Deriv[1][1] = v11.clone().subSelf(v01).subSelf(v10).addSelf(v00).multiplyScalar(deg*d1);
+	}
+    
+	
+	// calculate the curvature based on the Deriv
+    return krv(v00, Deriv, crv_result);     
+}
+
+
 	function crv_conv(in_crv,hi,low)
 	{
 		var out;
